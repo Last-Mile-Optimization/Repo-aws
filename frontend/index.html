@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão de Atraso Last-Mile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador Logístico</h1>
+        <p>Previsão de atrasos em entregas (Last-Mile)</p>
+
+        <form id="form-previsao">
+            <div class="form-group">
+                <label for="distancia_km">Distância da Rota (km):</label>
+                <input type="number" id="distancia_km" step="0.1" required placeholder="Ex: 15.5">
+            </div>
+
+            <div class="form-group">
+                <label for="tempo_estimado_min">Tempo Estimado Padrão (min):</label>
+                <input type="number" id="tempo_estimado_min" required placeholder="Ex: 45">
+            </div>
+
+            <div class="form-group">
+                <label for="clima_severo">Condições Meteorológicas:</label>
+                <select id="clima_severo">
+                    <option value="0">Clima Limpo / Normal</option>
+                    <option value="1">Chuva Forte / Clima Severo</option>
+                </select>
+            </div>
+
+            <button type="submit">Calcular Risco de Atraso</button>
+        </form>
+
+        <div id="resultado-card" class="oculto">
+            <h2 id="status-texto"></h2>
+            <p>Probabilidade de Atraso: <span id="probabilidade-valor"></span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
