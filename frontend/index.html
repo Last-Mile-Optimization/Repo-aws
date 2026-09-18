@@ -1,44 +1,287 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Previsão de Atraso Last-Mile</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predição de Atrasos em Entregas</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Simulador Logístico</h1>
-        <p>Previsão de atrasos em entregas (Last-Mile)</p>
-
-        <form id="form-previsao">
-            <div class="form-group">
-                <label for="distancia_km">Distância da Rota (km):</label>
-                <input type="number" id="distancia_km" step="0.1" required placeholder="Ex: 15.5">
-            </div>
-
-            <div class="form-group">
-                <label for="tempo_estimado_min">Tempo Estimado Padrão (min):</label>
-                <input type="number" id="tempo_estimado_min" required placeholder="Ex: 45">
-            </div>
-
-            <div class="form-group">
-                <label for="clima_severo">Condições Meteorológicas:</label>
-                <select id="clima_severo">
-                    <option value="0">Clima Limpo / Normal</option>
-                    <option value="1">Chuva Forte / Clima Severo</option>
-                </select>
-            </div>
-
-            <button type="submit">Calcular Risco de Atraso</button>
-        </form>
-
-        <div id="resultado-card" class="oculto">
-            <h2 id="status-texto"></h2>
-            <p>Probabilidade de Atraso: <span id="probabilidade-valor"></span></p>
-        </div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div>
+        <strong>Predict Delivery</strong>
+        <span>Predição de atrasos em entregas</span>
+      </div>
     </div>
+    <div class="topbar-actions">
+      <div class="app-mode-control">
+        <span id="appModeLabel">Modo teste</span>
+        <button type="button" id="appModeSwitch" class="mode-switch" role="switch" aria-checked="true"
+          aria-label="Alternar entre modo teste e API">
+          <span class="switch-thumb"></span>
+        </button>
+      </div>
+      <div class="api-status" id="apiStatus">
+        <span class="status-dot"></span>
+        <span>Verificando backend...</span>
+      </div>
+    </div>
+  </header>
 
-    <script src="script.js"></script>
+  <main class="page-shell">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">TCC • Machine Learning aplicado à logística</span>
+        <h1>Antecipe riscos de atraso antes que eles virem problema.</h1>
+        <p>
+          Informe os dados disponíveis no momento da compra. O sistema transforma
+          essas informações nas mesmas variáveis utilizadas pelos modelos e estima
+          o risco de atraso da entrega.
+        </p>
+      </div>
+      <aside class="hero-card">
+        <strong>Como funciona</strong>
+        <div class="flow-step"><span>1</span> Informe os dados do pedido</div>
+        <div class="flow-step"><span>2</span> O sistema calcula as variáveis derivadas</div>
+        <div class="flow-step"><span>3</span> Os modelos avaliam o risco</div>
+        <div class="flow-step"><span>4</span> Você recebe uma análise explicada</div>
+      </aside>
+    </section>
+
+    <section class="form-card">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Nova análise</span>
+          <h2 id="analysisTitle">Dados do pedido</h2>
+        </div>
+        <div class="simulation-mode" role="group" aria-label="Modo de simulação">
+          <span id="singleModeLabel" class="mode-label active">Um pedido</span>
+          <button type="button" id="simulationMode" class="mode-switch" role="switch"
+            aria-checked="false" aria-label="Simular vários pedidos por CSV"
+            aria-describedby="singleModeLabel batchModeLabel" aria-controls="predictionForm batchPanel">
+            <span class="switch-thumb"></span>
+          </button>
+          <span id="batchModeLabel" class="mode-label">Vários pedidos</span>
+        </div>
+      </div>
+
+      <form id="predictionForm">
+        <div class="form-section">
+          <div class="form-section-title">
+            <span class="number">01</span>
+            <div>
+              <h3>Dados da compra</h3>
+              <p>Informações conhecidas no momento em que o pedido é realizado.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-4">
+            <label>
+              <span>Data da compra</span>
+              <input id="purchaseDate" name="purchaseDate" type="date" required />
+            </label>
+
+            <label>
+              <span>Horário da compra</span>
+              <input id="purchaseTime" name="purchaseTime" type="time" required />
+            </label>
+
+            <label>
+              <span>Valor do produto</span>
+              <div class="input-prefix">
+                <span>R$</span>
+                <input id="price" name="price" type="number" step="0.01" min="0" required />
+              </div>
+            </label>
+
+            <label>
+              <span>Valor do frete</span>
+              <div class="input-prefix">
+                <span>R$</span>
+                <input id="freightValue" name="freightValue" type="number" step="0.01" min="0" required />
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">
+            <span class="number">02</span>
+            <div>
+              <h3>Características do produto</h3>
+              <p>O volume é calculado automaticamente a partir das dimensões.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-4">
+            <label>
+              <span>Peso</span>
+              <div class="input-suffix">
+                <input id="weight" name="weight" type="number" step="1" min="1" required />
+                <span>g</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Altura</span>
+              <div class="input-suffix">
+                <input id="height" name="height" type="number" step="0.1" min="0.1" required />
+                <span>cm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Largura</span>
+              <div class="input-suffix">
+                <input id="width" name="width" type="number" step="0.1" min="0.1" required />
+                <span>cm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Comprimento</span>
+              <div class="input-suffix">
+                <input id="length" name="length" type="number" step="0.1" min="0.1" required />
+                <span>cm</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="derived-box">
+            <span>Volume calculado</span>
+            <strong id="volumePreview">0 cm³</strong>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">
+            <span class="number">03</span>
+            <div>
+              <h3>Dados da entrega</h3>
+              <p>Nesta versão, a distância é informada diretamente. Depois, pode ser calculada por CEP.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <label>
+              <span>Distância entre vendedor e cliente</span>
+              <div class="input-suffix">
+                <input id="distance" name="distance" type="number" step="0.1" min="0" required />
+                <span>km</span>
+              </div>
+            </label>
+
+            <label class="toggle-field">
+              <span>Vendedor e cliente estão na mesma cidade?</span>
+              <div class="segmented" role="group" aria-label="Mesma cidade">
+                <button type="button" class="segmented-option active" data-value="1">Sim</button>
+                <button type="button" class="segmented-option" data-value="0">Não</button>
+              </div>
+              <input type="hidden" id="sameCity" value="1" />
+            </label>
+          </div>
+        </div>
+
+        <div class="features-preview">
+          <div>
+            <span class="eyebrow">Pré-processamento</span>
+            <h3>Variáveis calculadas automaticamente</h3>
+            <p>Esses valores não precisam ser preenchidos manualmente.</p>
+          </div>
+          <div class="feature-chips" id="featureChips">
+            <span>feriado na compra</span>
+            <span>dias desde o último feriado</span>
+            <span>dias até o próximo feriado</span>
+            <span>hora da compra</span>
+            <span>dia da semana</span>
+            <span>fim de semana</span>
+            <span>volume</span>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <div class="privacy-note">
+            <strong>Sem data leakage</strong>
+            <span>A análise usa apenas dados disponíveis no momento da compra.</span>
+          </div>
+          <button type="submit" class="button primary" id="submitButton">
+            <span>Analisar risco de atraso</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </form>
+
+      <form id="batchPanel" aria-labelledby="batchTitle" hidden>
+        <div class="form-section">
+          <div class="form-section-title">
+            <span class="number">01</span>
+            <div>
+              <h3 id="batchTitle">Adicionar arquivo CSV</h3>
+              <p>Selecione um arquivo com os pedidos que deseja analisar em conjunto.</p>
+            </div>
+          </div>
+          <div class="csv-upload">
+            <label for="csvFile"><span>Arquivo de pedidos</span></label>
+            <input id="csvFile" name="csvFile" type="file" accept=".csv,text/csv"
+              aria-describedby="csvHelp csvStatus" />
+            <p id="csvHelp">Formato .csv. O arquivo será enviado para análise quando você clicar no botão abaixo.</p>
+            <p id="csvStatus" role="status" aria-live="polite">Nenhum arquivo selecionado.</p>
+            <div class="csv-actions">
+              <a class="button ghost compact" href="exemplo-pedidos.csv" download>Baixar CSV de exemplo</a>
+              <button type="button" class="button ghost compact" id="removeCsv" hidden>Remover arquivo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="features-preview">
+          <div>
+            <span class="eyebrow">Pré-processamento</span>
+            <h3>Variáveis calculadas automaticamente</h3>
+            <p>O sistema aplica o mesmo tratamento a todos os pedidos do arquivo.</p>
+          </div>
+          <div class="feature-chips">
+            <span>feriado na compra</span>
+            <span>dias desde o último feriado</span>
+            <span>dias até o próximo feriado</span>
+            <span>hora da compra</span>
+            <span>dia da semana</span>
+            <span>fim de semana</span>
+            <span>volume</span>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <div class="privacy-note">
+            <strong>Análise em lote</strong>
+            <span>Todos os pedidos do arquivo serão enviados para a análise de risco.</span>
+          </div>
+          <button type="submit" class="button primary" id="batchSubmitButton" disabled>
+            <span>Analisar risco de atraso</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div class="loading-overlay hidden" id="loadingOverlay" aria-live="polite">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <h2>Analisando pedido...</h2>
+      <p>O sistema está processando as informações e executando os modelos preditivos.</p>
+      <div class="loading-steps">
+        <div class="loading-step active"><span></span>Processando informações da compra</div>
+        <div class="loading-step"><span></span>Calculando variáveis derivadas</div>
+        <div class="loading-step"><span></span>Executando modelos preditivos</div>
+        <div class="loading-step"><span></span>Preparando a explicação do resultado</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app-mode.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/form.js"></script>
 </body>
 </html>

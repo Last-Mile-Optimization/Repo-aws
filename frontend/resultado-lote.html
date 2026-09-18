@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resultado da análise em lote</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">P</div><div><strong>Predict Delivery</strong><span>Predição de atrasos em entregas</span></div></div>
+    <div class="topbar-actions">
+      <div class="app-mode-control"><span id="appModeLabel">Modo teste</span><button type="button" id="appModeSwitch" class="mode-switch" role="switch" aria-checked="true" aria-label="Alternar entre modo teste e API"><span class="switch-thumb"></span></button></div>
+      <a class="button ghost compact" href="index.html">← Nova análise</a>
+    </div>
+  </header>
+  <main class="page-shell result-page">
+    <section class="result-header"><div><span class="eyebrow">Resultado em lote</span><h1>Diagnóstico dos pedidos</h1><p id="batchDescription">Resumo das previsões geradas para o arquivo enviado.</p></div><div class="analysis-id">ID <strong id="batchAnalysisId">—</strong></div></section>
+    <section class="panel"><div class="batch-summary" id="batchSummary"></div></section>
+    <section class="panel"><div class="panel-heading"><div><span class="eyebrow">Pedidos analisados</span><h2>Resultado por pedido</h2></div><span class="tag" id="batchModeTag">—</span></div><div class="batch-table-wrap"><table class="batch-table"><thead><tr><th>Pedido</th><th>Risco</th><th>Probabilidade</th><th>Distância</th><th>Frete</th><th>Classificação</th></tr></thead><tbody id="batchResults"></tbody></table></div></section>
+  </main>
+  <script src="js/app-mode.js"></script>
+  <script src="js/resultado-lote.js"></script>
+</body>
+</html>

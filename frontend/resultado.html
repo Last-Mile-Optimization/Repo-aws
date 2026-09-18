@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resultado da análise</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div>
+        <strong>Predict Delivery</strong>
+        <span>Predição de atrasos em entregas</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="app-mode-control">
+        <span id="appModeLabel">Modo teste</span>
+        <button type="button" id="appModeSwitch" class="mode-switch" role="switch" aria-checked="true"
+          aria-label="Alternar entre modo teste e API"><span class="switch-thumb"></span></button>
+      </div>
+      <a class="button ghost compact" href="index.html">← Nova análise</a>
+    </div>
+  </header>
+
+  <main class="page-shell result-page">
+    <section class="result-header">
+      <div>
+        <span class="eyebrow">Resultado da análise</span>
+        <h1>Diagnóstico do pedido</h1>
+        <p>Predição realizada com base apenas em dados disponíveis no momento da compra.</p>
+      </div>
+      <div class="analysis-id">ID <strong id="analysisId">—</strong></div>
+    </section>
+
+    <section class="result-grid">
+      <article class="result-card prediction-card" id="predictionCard">
+        <span class="eyebrow">Predição principal</span>
+        <div class="prediction-badge" id="predictionBadge">—</div>
+        <h2 id="predictionTitle">Carregando resultado...</h2>
+        <p id="predictionDescription"></p>
+        <div class="model-caption">Modelo principal: <strong id="mainModelName">Deep Learning</strong></div>
+      </article>
+
+      <article class="result-card probability-card">
+        <span class="eyebrow">Probabilidade de atraso</span>
+        <div class="probability-number" id="probabilityNumber">0%</div>
+        <div class="risk-track">
+          <div class="risk-fill" id="riskFill"></div>
+        </div>
+        <div class="risk-scale">
+          <span>Baixo</span><span>Moderado</span><span>Alto</span><span>Muito alto</span>
+        </div>
+        <div class="risk-level">
+          Nível de risco: <strong id="riskLevel">—</strong>
+        </div>
+      </article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel panel-wide">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Explicabilidade</span>
+            <h2>Fatores que influenciaram a previsão</h2>
+          </div>
+          <span class="tag">Visão simplificada</span>
+        </div>
+        <p class="panel-description">
+          Quanto maior a barra, maior a influência daquele fator nesta previsão.
+        </p>
+        <div id="factorsChart" class="bar-chart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Ação recomendada</span>
+            <h2>O que fazer agora?</h2>
+          </div>
+        </div>
+        <div class="recommendation" id="recommendation"></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Comparativo</span>
+          <h2>Como os modelos avaliaram este pedido</h2>
+        </div>
+        <span class="tag">Não é ensemble</span>
+      </div>
+      <p class="panel-description">
+        Cada modelo é executado separadamente. O comparativo ajuda a visualizar concordâncias e divergências.
+      </p>
+      <div id="modelsChart" class="model-comparison"></div>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">K-Means</span>
+            <h2>Perfil deste pedido</h2>
+          </div>
+        </div>
+        <div class="cluster-card">
+          <div class="cluster-icon">◎</div>
+          <div>
+            <strong id="clusterName">—</strong>
+            <p id="clusterDescription"></p>
+          </div>
+        </div>
+        <div class="stats-grid" id="clusterStats"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">DBSCAN</span>
+            <h2>Análise de padrão</h2>
+          </div>
+        </div>
+        <div class="pattern-status" id="patternStatus"></div>
+      </article>
+    </section>
+<!-- 
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">PCA</span>
+          <h2>Posição do pedido entre os dados históricos</h2>
+        </div>
+        <span class="tag">Visualização 2D</span>
+      </div>
+      <p class="panel-description">
+        A representação abaixo reduz várias características do pedido para duas dimensões apenas para visualização.
+      </p>
+      <canvas id="pcaCanvas" width="1100" height="360"></canvas>
+      <div class="pca-legend">
+        <span><i class="legend-dot historical"></i>Pedidos históricos</span>
+        <span><i class="legend-dot current"></i>Novo pedido</span>
+      </div>
+    </section> -->
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Dados utilizados</span>
+          <h2>Resumo do pedido analisado</h2>
+        </div>
+      </div>
+      <div class="input-summary" id="inputSummary"></div>
+    </section>
+
+    <div class="bottom-actions">
+      <a class="button primary" href="index.html">← Analisar outro pedido</a>
+    </div>
+  </main>
+
+  <script src="js/app-mode.js"></script>
+  <script src="js/resultado.js"></script>
+</body>
+</html>
