@@ -1,6 +1,6 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "http://127.0.0.1:3000";
 const SINGLE_PREDICTION_ROUTE = "/predict";
-const BATCH_PREDICTION_ROUTE = "/predict/batch";
+const BATCH_PREDICTION_ROUTE = "/predict-batch";
 
 const form = document.getElementById("predictionForm");
 const volumePreview = document.getElementById("volumePreview");
