@@ -36,14 +36,21 @@ function fillTestExample() {
 
     Object.entries(example).forEach(([id, value]) => {
         const element = document.getElementById(id);
-        if (element) element.value = value;
+
+        if (element) {
+            element.value = value;
+        }
     });
 
     segmentedOptions.forEach(button => {
-        button.classList.toggle("active", button.dataset.value === example.sameCity);
+        button.classList.toggle(
+            "active",
+            button.dataset.value === example.sameCity
+        );
     });
 
     sameCityInput.value = example.sameCity;
+
     calcVolume();
 }
 
@@ -65,12 +72,18 @@ function calcVolume() {
         document.getElementById("length").value || 0
     );
 
-    const volume = height * width * length;
+    const volume =
+        height *
+        width *
+        length;
 
     volumePreview.textContent =
-        `${volume.toLocaleString("pt-BR", {
-            maximumFractionDigits: 1
-        })} cm³`;
+        `${volume.toLocaleString(
+            "pt-BR",
+            {
+                maximumFractionDigits: 1
+            }
+        )} cm³`;
 
     return volume;
 }
@@ -80,7 +93,10 @@ function calcVolume() {
 
     document
         .getElementById(id)
-        .addEventListener("input", calcVolume);
+        .addEventListener(
+            "input",
+            calcVolume
+        );
 
 });
 
@@ -91,16 +107,21 @@ function calcVolume() {
 
 segmentedOptions.forEach(button => {
 
-    button.addEventListener("click", () => {
+    button.addEventListener(
+        "click",
+        () => {
 
-        segmentedOptions.forEach(option => {
-            option.classList.remove("active");
-        });
+            segmentedOptions.forEach(option => {
+                option.classList.remove("active");
+            });
 
-        button.classList.add("active");
+            button.classList.add("active");
 
-        sameCityInput.value = button.dataset.value;
-    });
+            sameCityInput.value =
+                button.dataset.value;
+
+        }
+    );
 
 });
 
@@ -109,48 +130,153 @@ segmentedOptions.forEach(button => {
    ALTERNÂNCIA ENTRE PEDIDO ÚNICO E ARQUIVO CSV
    ========================================================= */
 
-simulationMode.addEventListener("click", () => {
-    const batchMode = simulationMode.getAttribute("aria-checked") !== "true";
-    simulationMode.setAttribute("aria-checked", String(batchMode));
-    form.hidden = batchMode;
-    batchPanel.hidden = !batchMode;
-    document.getElementById("analysisTitle").textContent =
-        batchMode ? "Pedidos por CSV" : "Dados do pedido";
-    document.getElementById("singleModeLabel").classList.toggle("active", !batchMode);
-    document.getElementById("batchModeLabel").classList.toggle("active", batchMode);
-});
+simulationMode.addEventListener(
+    "click",
+    () => {
 
-csvFile.addEventListener("change", () => {
-    const file = csvFile.files[0];
-    csvStatus.classList.remove("csv-error");
-    removeCsv.hidden = true;
-    batchSubmitButton.disabled = true;
-    if (!file) {
-        csvStatus.textContent = "Nenhum arquivo selecionado.";
-        return;
+        const batchMode =
+            simulationMode.getAttribute("aria-checked") !== "true";
+
+        simulationMode.setAttribute(
+            "aria-checked",
+            String(batchMode)
+        );
+
+        form.hidden =
+            batchMode;
+
+        batchPanel.hidden =
+            !batchMode;
+
+        document
+            .getElementById("analysisTitle")
+            .textContent =
+                batchMode
+                    ? "Pedidos por CSV"
+                    : "Dados do pedido";
+
+        document
+            .getElementById("singleModeLabel")
+            .classList
+            .toggle(
+                "active",
+                !batchMode
+            );
+
+        document
+            .getElementById("batchModeLabel")
+            .classList
+            .toggle(
+                "active",
+                batchMode
+            );
+
     }
-    if (!/\.csv$/i.test(file.name) || file.size === 0) {
-        csvStatus.textContent = file.size === 0
-            ? "O arquivo está vazio. Selecione um CSV com os pedidos."
-            : "Formato inválido. Selecione um arquivo com extensão .csv.";
-        csvStatus.classList.add("csv-error");
+);
+
+
+/* =========================================================
+   SELEÇÃO DO ARQUIVO CSV
+   ========================================================= */
+
+csvFile.addEventListener(
+    "change",
+    () => {
+
+        const file =
+            csvFile.files[0];
+
+        csvStatus.classList.remove(
+            "csv-error"
+        );
+
+        removeCsv.hidden =
+            true;
+
+        batchSubmitButton.disabled =
+            true;
+
+
+        if (!file) {
+
+            csvStatus.textContent =
+                "Nenhum arquivo selecionado.";
+
+            return;
+        }
+
+
+        if (
+            !/\.csv$/i.test(file.name) ||
+            file.size === 0
+        ) {
+
+            csvStatus.textContent =
+                file.size === 0
+
+                    ? "O arquivo está vazio. Selecione um CSV com os pedidos."
+
+                    : "Formato inválido. Selecione um arquivo com extensão .csv.";
+
+
+            csvStatus.classList.add(
+                "csv-error"
+            );
+
+
+            csvFile.value = "";
+
+            return;
+        }
+
+
+        csvStatus.textContent =
+            `Arquivo selecionado: ${file.name} (` +
+            `${(file.size / 1024).toLocaleString(
+                "pt-BR",
+                {
+                    maximumFractionDigits: 1
+                }
+            )} KB).`;
+
+
+        removeCsv.hidden =
+            false;
+
+        batchSubmitButton.disabled =
+            false;
+
+    }
+);
+
+
+/* =========================================================
+   REMOVER CSV
+   ========================================================= */
+
+removeCsv.addEventListener(
+    "click",
+    () => {
+
         csvFile.value = "";
-        return;
-    }
-    // textContent evita interpretar o nome do arquivo como HTML.
-    csvStatus.textContent = `Arquivo selecionado: ${file.name} (${(file.size / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB).`;
-    removeCsv.hidden = false;
-    batchSubmitButton.disabled = false;
-});
 
-removeCsv.addEventListener("click", () => {
-    csvFile.value = "";
-    csvStatus.textContent = "Nenhum arquivo selecionado.";
-    csvStatus.classList.remove("csv-error");
-    removeCsv.hidden = true;
-    batchSubmitButton.disabled = true;
-    csvFile.focus();
-});
+        csvStatus.textContent =
+            "Nenhum arquivo selecionado.";
+
+        csvStatus.classList.remove(
+            "csv-error"
+        );
+
+        removeCsv.hidden =
+            true;
+
+        batchSubmitButton.disabled =
+            true;
+
+        csvFile.focus();
+
+    }
+);
 
 
 /* =========================================================
@@ -159,24 +285,39 @@ removeCsv.addEventListener("click", () => {
 
 async function checkApi() {
 
-    if (window.AppMode.isTestMode()) {
+    if (
+        window.AppMode.isTestMode()
+    ) {
+
         fillTestExample();
-        apiStatus.className = "api-status online";
+
+
+        apiStatus.className =
+            "api-status online";
+
+
         apiStatus.innerHTML = `
             <span class="status-dot"></span>
             <span>Dados de teste ativos</span>
         `;
+
+
         return;
     }
 
+
     try {
 
-        const response = await fetch(
-            `${API_URL}/health`,
-            {
-                signal: AbortSignal.timeout(1800)
-            }
-        );
+        const response =
+            await fetch(
+                `${API_URL}/health`,
+                {
+                    signal:
+                        AbortSignal.timeout(
+                            1800
+                        )
+                }
+            );
 
 
         if (!response.ok) {
@@ -184,16 +325,22 @@ async function checkApi() {
         }
 
 
-        apiStatus.className = "api-status online";
+        apiStatus.className =
+            "api-status online";
+
 
         apiStatus.innerHTML = `
             <span class="status-dot"></span>
             <span>Backend conectado</span>
         `;
 
-    } catch {
+    }
 
-        apiStatus.className = "api-status offline";
+    catch {
+
+        apiStatus.className =
+            "api-status offline";
+
 
         apiStatus.innerHTML = `
             <span class="status-dot"></span>
@@ -208,48 +355,108 @@ async function checkApi() {
    TELA DE CARREGAMENTO
    ========================================================= */
 
-function showLoading(batchMode = false) {
+function showLoading(
+    batchMode = false
+) {
 
-    loadingOverlay.classList.remove("hidden");
+    loadingOverlay
+        .classList
+        .remove("hidden");
 
-    loadingOverlay.querySelector("h2").textContent =
-        batchMode ? "Analisando pedidos..." : "Analisando pedido...";
 
-    loadingOverlay.querySelector("p").textContent = batchMode
-        ? "O sistema está processando o arquivo e executando os modelos preditivos."
-        : "O sistema está processando as informações e executando os modelos preditivos.";
+    loadingOverlay
+        .querySelector("h2")
+        .textContent =
+
+            batchMode
+                ? "Analisando pedidos..."
+                : "Analisando pedido...";
+
+
+    loadingOverlay
+        .querySelector("p")
+        .textContent =
+
+            batchMode
+
+                ? "O sistema está processando o arquivo e executando os modelos preditivos."
+
+                : "O sistema está processando as informações e executando os modelos preditivos.";
+
 
     const steps = [
-        ...document.querySelectorAll(".loading-step")
+        ...document.querySelectorAll(
+            ".loading-step"
+        )
     ];
 
 
     steps.forEach(step => {
-        step.classList.remove("active");
-    });
 
-
-    steps[0].classList.add("active");
-
-
-    steps.slice(1).forEach((step, index) => {
-
-        setTimeout(() => {
-
-            steps.forEach(item => {
-                item.classList.remove("active");
-            });
-
-            step.classList.add("active");
-
-        }, (index + 1) * 600);
+        step.classList.remove(
+            "active"
+        );
 
     });
+
+
+    if (steps.length > 0) {
+
+        steps[0]
+            .classList
+            .add("active");
+
+    }
+
+
+    steps
+        .slice(1)
+        .forEach(
+            (step, index) => {
+
+                setTimeout(
+                    () => {
+
+                        steps.forEach(
+                            item => {
+
+                                item
+                                    .classList
+                                    .remove(
+                                        "active"
+                                    );
+
+                            }
+                        );
+
+
+                        step
+                            .classList
+                            .add(
+                                "active"
+                            );
+
+                    },
+
+                    (index + 1) * 600
+                );
+
+            }
+        );
 
 }
 
+
+/* =========================================================
+   ESCONDE A TELA DE CARREGAMENTO
+   ========================================================= */
+
 function hideLoading() {
-    loadingOverlay.classList.add("hidden");
+
+    loadingOverlay
+        .classList
+        .add("hidden");
+
 }
 
 
@@ -262,48 +469,96 @@ function buildPayload() {
     return {
 
         purchase_date:
-            document.getElementById("purchaseDate").value,
+            document
+                .getElementById(
+                    "purchaseDate"
+                )
+                .value,
+
 
         purchase_time:
-            document.getElementById("purchaseTime").value,
+            document
+                .getElementById(
+                    "purchaseTime"
+                )
+                .value,
+
 
         price:
             Number(
-                document.getElementById("price").value
+                document
+                    .getElementById(
+                        "price"
+                    )
+                    .value
             ),
+
 
         freight_value:
             Number(
-                document.getElementById("freightValue").value
+                document
+                    .getElementById(
+                        "freightValue"
+                    )
+                    .value
             ),
+
 
         product_weight_g:
             Number(
-                document.getElementById("weight").value
+                document
+                    .getElementById(
+                        "weight"
+                    )
+                    .value
             ),
+
 
         height_cm:
             Number(
-                document.getElementById("height").value
+                document
+                    .getElementById(
+                        "height"
+                    )
+                    .value
             ),
+
 
         width_cm:
             Number(
-                document.getElementById("width").value
+                document
+                    .getElementById(
+                        "width"
+                    )
+                    .value
             ),
+
 
         length_cm:
             Number(
-                document.getElementById("length").value
+                document
+                    .getElementById(
+                        "length"
+                    )
+                    .value
             ),
+
 
         distance_km:
             Number(
-                document.getElementById("distance").value
+                document
+                    .getElementById(
+                        "distance"
+                    )
+                    .value
             ),
 
+
         same_city:
-            Number(sameCityInput.value)
+            Number(
+                sameCityInput.value
+            )
+
     };
 }
 
@@ -318,83 +573,136 @@ function buildPayload() {
    Estes valores NÃO são resultados reais do modelo do TCC.
    ========================================================= */
 
-function demoPrediction(payload) {
+function demoPrediction(
+    payload
+) {
 
     const volume =
+
         payload.height_cm *
+
         payload.width_cm *
+
         payload.length_cm;
 
 
-    const date = new Date(
-        `${payload.purchase_date}T${payload.purchase_time}:00`
-    );
+    const date =
+        new Date(
+            `${payload.purchase_date}T${payload.purchase_time}:00`
+        );
 
 
-    const hour = date.getHours();
+    const hour =
+        date.getHours();
 
-    const day = date.getDay();
+
+    const day =
+        date.getDay();
+
 
     const weekend =
-        [0, 6].includes(day) ? 1 : 0;
+        [0, 6].includes(day)
+            ? 1
+            : 0;
 
 
-    /*
-       Cálculo fictício apenas para demonstração
-       visual do sistema.
-    */
+    /* =====================================================
+       CÁLCULO FICTÍCIO APENAS PARA DEMONSTRAÇÃO
+       ===================================================== */
 
-    let score = 0.16;
+    let score =
+        0.16;
 
 
     score +=
+
         Math.min(
             payload.distance_km / 1500,
             1
-        ) * 0.28;
+        )
+
+        * 0.28;
 
 
     score +=
+
         Math.min(
+
             payload.freight_value /
-            Math.max(payload.price, 1),
+
+            Math.max(
+                payload.price,
+                1
+            ),
+
             0.5
-        ) * 0.18;
+
+        )
+
+        * 0.18;
 
 
     score +=
+
         Math.min(
-            payload.product_weight_g / 12000,
+
+            payload.product_weight_g /
+            12000,
+
             1
-        ) * 0.10;
+
+        )
+
+        * 0.10;
 
 
     score +=
+
         Math.min(
-            volume / 120000,
+
+            volume /
+            120000,
+
             1
-        ) * 0.08;
 
+        )
 
-    score += weekend * 0.08;
+        * 0.08;
 
 
     score +=
+        weekend * 0.08;
+
+
+    score +=
+
         payload.same_city
+
             ? -0.06
+
             : 0.08;
 
 
     score +=
+
         hour >= 18
+
             ? 0.03
+
             : 0;
 
 
-    score = Math.max(
-        0.05,
-        Math.min(0.96, score)
-    );
+    score =
+        Math.max(
+
+            0.05,
+
+            Math.min(
+                0.96,
+                score
+            )
+
+        );
 
 
     /* =====================================================
@@ -408,47 +716,67 @@ function demoPrediction(payload) {
             score
         ],
 
+
         [
             "Random Forest",
+
             Math.max(
+
                 0.03,
+
                 Math.min(
                     0.97,
                     score + 0.05
                 )
+
             )
         ],
 
+
         [
             "XGBoost",
+
             Math.max(
+
                 0.03,
+
                 Math.min(
                     0.97,
                     score + 0.08
                 )
+
             )
         ],
 
+
         [
             "Árvore de Decisão",
+
             Math.max(
+
                 0.03,
+
                 Math.min(
                     0.97,
                     score - 0.04
                 )
+
             )
         ],
 
+
         [
             "KNN",
+
             Math.max(
+
                 0.03,
+
                 Math.min(
                     0.97,
                     score - 0.12
                 )
+
             )
         ]
 
@@ -463,62 +791,109 @@ function demoPrediction(payload) {
 
         [
             "Distância da entrega",
+
             Math.min(
+
                 100,
+
                 Math.round(
-                    (payload.distance_km / 900) * 100
+
+                    (
+                        payload.distance_km /
+                        900
+                    )
+
+                    * 100
+
                 )
+
             )
         ],
+
 
         [
             "Valor do frete",
+
             Math.min(
+
                 100,
+
                 Math.round(
+
                     (
+
                         payload.freight_value /
-                        Math.max(payload.price, 1)
-                    ) * 170
+
+                        Math.max(
+                            payload.price,
+                            1
+                        )
+
+                    )
+
+                    * 170
+
                 )
+
             )
         ],
+
 
         [
             "Peso do produto",
+
             Math.min(
+
                 100,
+
                 Math.round(
+
                     (
                         payload.product_weight_g /
                         5000
-                    ) * 100
+                    )
+
+                    * 100
+
                 )
+
             )
         ],
+
 
         [
             "Volume do produto",
+
             Math.min(
+
                 100,
+
                 Math.round(
+
                     (
                         volume /
                         70000
-                    ) * 100
+                    )
+
+                    * 100
+
                 )
+
             )
         ],
 
+
         [
             "Fim de semana",
+
             weekend
                 ? 62
                 : 18
         ]
 
     ].sort(
-        (a, b) => b[1] - a[1]
+        (a, b) =>
+            b[1] - a[1]
     );
 
 
@@ -529,15 +904,19 @@ function demoPrediction(payload) {
     let cluster;
 
 
-    if (payload.distance_km > 500) {
+    if (
+        payload.distance_km > 500
+    ) {
 
         cluster = {
 
             name:
                 "Pedidos de longa distância",
 
+
             description:
                 "Entregas com maior deslocamento entre vendedor e cliente.",
+
 
             stats: [
 
@@ -557,9 +936,11 @@ function demoPrediction(payload) {
                 ]
 
             ]
+
         };
 
     }
+
 
     else if (
         payload.product_weight_g > 5000
@@ -570,8 +951,10 @@ function demoPrediction(payload) {
             name:
                 "Pedidos pesados de média distância",
 
+
             description:
                 "Produtos de maior peso com deslocamento intermediário.",
+
 
             stats: [
 
@@ -591,9 +974,11 @@ function demoPrediction(payload) {
                 ]
 
             ]
+
         };
 
     }
+
 
     else {
 
@@ -602,8 +987,10 @@ function demoPrediction(payload) {
             name:
                 "Pedidos urbanos e leves",
 
+
             description:
                 "Entregas de menor porte e menor deslocamento.",
+
 
             stats: [
 
@@ -623,6 +1010,7 @@ function demoPrediction(payload) {
                 ]
 
             ]
+
         };
 
     }
@@ -635,7 +1023,9 @@ function demoPrediction(payload) {
     return {
 
         analysis_id:
+
             "DEMO-" +
+
             Math.random()
                 .toString(36)
                 .slice(2, 8)
@@ -643,6 +1033,7 @@ function demoPrediction(payload) {
 
 
         prediction:
+
             score >= 0.5
                 ? 1
                 : 0,
@@ -659,12 +1050,15 @@ function demoPrediction(payload) {
         risk_level:
 
             score < 0.30
+
                 ? "Baixo"
 
                 : score < 0.61
+
                     ? "Moderado"
 
                     : score < 0.81
+
                         ? "Alto"
 
                         : "Muito alto",
@@ -673,6 +1067,7 @@ function demoPrediction(payload) {
         models:
 
             variants.map(
+
                 ([name, probability]) => ({
 
                     name,
@@ -680,23 +1075,28 @@ function demoPrediction(payload) {
                     probability,
 
                     prediction:
+
                         probability >= 0.5
                             ? 1
                             : 0
 
                 })
+
             ),
 
 
         factors:
 
             factors.map(
+
                 ([name, impact]) => ({
 
                     name,
+
                     impact
 
                 })
+
             ),
 
 
@@ -735,25 +1135,48 @@ function demoPrediction(payload) {
 
         pca_point: {
 
-            x: Math.max(
-                -2.5,
-                Math.min(
-                    2.5,
-                    (
-                        payload.distance_km - 350
-                    ) / 250
-                )
-            ),
+            x:
 
-            y: Math.max(
-                -2.2,
-                Math.min(
-                    2.2,
-                    (
-                        payload.product_weight_g - 2500
-                    ) / 1800
+                Math.max(
+
+                    -2.5,
+
+                    Math.min(
+
+                        2.5,
+
+                        (
+                            payload.distance_km -
+                            350
+                        )
+
+                        / 250
+
+                    )
+
+                ),
+
+
+            y:
+
+                Math.max(
+
+                    -2.2,
+
+                    Math.min(
+
+                        2.2,
+
+                        (
+                            payload.product_weight_g -
+                            2500
+                        )
+
+                        / 1800
+
+                    )
+
                 )
-            )
 
         },
 
@@ -763,11 +1186,14 @@ function demoPrediction(payload) {
             purchase_hour:
                 hour,
 
+
             purchase_day_of_week:
                 day,
 
+
             is_weekend:
                 weekend,
+
 
             volume_cm3:
                 volume
@@ -781,16 +1207,18 @@ function demoPrediction(payload) {
 
         demo_mode:
             true
+
     };
 }
 
 
 /* =========================================================
-   ENVIO DO FORMULÁRIO
+   ENVIO DO FORMULÁRIO INDIVIDUAL
    ========================================================= */
 
 form.addEventListener(
     "submit",
+
     async event => {
 
         event.preventDefault();
@@ -800,6 +1228,11 @@ form.addEventListener(
             buildPayload();
 
 
+        /*
+           Exibe a tela:
+           "Analisando pedido..."
+        */
+
         showLoading();
 
 
@@ -808,85 +1241,121 @@ form.addEventListener(
 
         try {
 
-            if (window.AppMode.isTestMode()) {
-                result = window.MockPredictions.single(payload);
+            /* =============================================
+               MODO TESTE
+               ============================================= */
+
+            if (
+                window.AppMode.isTestMode()
+            ) {
+
+                result =
+                    window.MockPredictions
+                        .single(
+                            payload
+                        );
+
             }
+
+
+            /* =============================================
+               API REAL
+               ============================================= */
+
             else {
 
-            /*
-               Tenta utilizar o backend real.
-            */
+                const response =
+                    await fetch(
 
-            const response = await fetch(
-                `${API_URL}${SINGLE_PREDICTION_ROUTE}`,
-                {
+                        `${API_URL}${SINGLE_PREDICTION_ROUTE}`,
 
-                    method:
-                        "POST",
+                        {
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                            method:
+                                "POST",
 
-                    body:
-                        JSON.stringify(payload)
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+
+                        }
+
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Backend indisponível"
+                    );
 
                 }
-            );
 
 
-            if (!response.ok) {
-
-                throw new Error(
-                    "Backend indisponível"
-                );
-
-            }
-
-
-            result =
-                await response.json();
+                result =
+                    await response.json();
 
             }
 
         }
+
 
         catch {
 
             /*
-               Se o backend não estiver rodando,
+               Caso o backend esteja indisponível,
                utiliza o modo demonstração.
             */
 
             result =
-                demoPrediction(payload);
+                demoPrediction(
+                    payload
+                );
 
         }
 
 
-        /*
-           Guarda o resultado temporariamente
-           para a página resultado.html.
-        */
+        /* =================================================
+           SALVA O RESULTADO
+           ================================================= */
 
         sessionStorage.setItem(
+
             "predictionResult",
-            JSON.stringify(result)
+
+            JSON.stringify(
+                result
+            )
+
         );
 
 
-        /*
-           Pequeno delay para permitir que
-           a animação seja exibida.
-        */
+        /* =================================================
+           AGUARDA A ANIMAÇÃO ANTES DO REDIRECIONAMENTO
+           ================================================= */
 
-        setTimeout(() => {
+        setTimeout(
 
-            window.location.href =
-                "resultado.html";
+            () => {
 
-        }, 2300);
+                window.location.href =
+                    "resultado.html";
+
+            },
+
+            2300
+
+        );
 
     }
 );
@@ -898,60 +1367,287 @@ form.addEventListener(
 
 batchPanel.addEventListener(
     "submit",
+
     async event => {
 
         event.preventDefault();
 
-        const file = csvFile.files[0];
 
-        if (!file || !/\.csv$/i.test(file.name) || file.size === 0) {
-            batchSubmitButton.disabled = true;
-            csvStatus.textContent = "Selecione um arquivo CSV válido antes de iniciar a análise.";
-            csvStatus.classList.add("csv-error");
+        /* =================================================
+           RECUPERA O ARQUIVO
+           ================================================= */
+
+        const file =
+            csvFile.files[0];
+
+
+        /* =================================================
+           VALIDAÇÃO
+           ================================================= */
+
+        if (
+
+            !file ||
+
+            !/\.csv$/i.test(
+                file.name
+            ) ||
+
+            file.size === 0
+
+        ) {
+
+            batchSubmitButton.disabled =
+                true;
+
+
+            csvStatus.textContent =
+                "Selecione um arquivo CSV válido antes de iniciar a análise.";
+
+
+            csvStatus.classList.add(
+                "csv-error"
+            );
+
+
             return;
         }
 
-        const payload = new FormData();
-        payload.append("file", file, file.name);
 
-        batchSubmitButton.disabled = true;
-        csvStatus.classList.remove("csv-error");
+        /* =================================================
+           PREPARA O ARQUIVO PARA ENVIO
+           ================================================= */
+
+        const payload =
+            new FormData();
+
+
+        payload.append(
+            "file",
+            file,
+            file.name
+        );
+
+
+        batchSubmitButton.disabled =
+            true;
+
+
+        csvStatus.classList.remove(
+            "csv-error"
+        );
+
+
+        /* =================================================
+           MOSTRA A MESMA TELA DE CARREGAMENTO
+
+           true = análise em lote
+           ================================================= */
+
         showLoading(true);
+
 
         try {
 
-            if (window.AppMode.isTestMode()) {
-                const csvText = await file.text();
-                const result = window.MockPredictions.batchFromCsv(csvText);
-                sessionStorage.setItem("batchPredictionResult", JSON.stringify(result));
-                window.location.href = "resultado-lote.html";
+            /* =============================================
+               MODO TESTE
+               ============================================= */
+
+            if (
+                window.AppMode.isTestMode()
+            ) {
+
+                /*
+                   Lê o CSV localmente.
+                */
+
+                const csvText =
+                    await file.text();
+
+
+                /*
+                   Gera os resultados de demonstração.
+                */
+
+                const result =
+                    window.MockPredictions
+                        .batchFromCsv(
+                            csvText
+                        );
+
+
+                /*
+                   Salva os resultados para
+                   resultado-lote.html.
+                */
+
+                sessionStorage.setItem(
+
+                    "batchPredictionResult",
+
+                    JSON.stringify(
+                        result
+                    )
+
+                );
+
+
+                /*
+                   Mantém a tela de carregamento
+                   visível por alguns segundos.
+                */
+
+                setTimeout(
+
+                    () => {
+
+                        window.location.href =
+                            "resultado-lote.html";
+
+                    },
+
+                    2300
+
+                );
+
+
                 return;
             }
 
-            const response = await fetch(
-                `${API_URL}${BATCH_PREDICTION_ROUTE}`,
-                {
-                    method: "POST",
-                    body: payload
-                }
-            );
+
+            /* =============================================
+               API REAL
+               ============================================= */
+
+            const response =
+                await fetch(
+
+                    `${API_URL}${BATCH_PREDICTION_ROUTE}`,
+
+                    {
+
+                        method:
+                            "POST",
+
+
+                        body:
+                            payload
+
+                    }
+
+                );
+
+
+            /* =============================================
+               VERIFICA SE A API RETORNOU ERRO
+               ============================================= */
 
             if (!response.ok) {
-                throw new Error(`Não foi possível analisar o arquivo (HTTP ${response.status}).`);
+
+                throw new Error(
+
+                    `Não foi possível analisar o arquivo ` +
+                    `(HTTP ${response.status}).`
+
+                );
+
             }
 
-            const result = await response.json();
-            sessionStorage.setItem("batchPredictionResult", JSON.stringify(result));
-            window.location.href = "resultado-lote.html";
+
+            /* =============================================
+               RESULTADO DA API
+               ============================================= */
+
+            const result =
+                await response.json();
+
+
+            /* =============================================
+               SALVA RESULTADO DO LOTE
+               ============================================= */
+
+            sessionStorage.setItem(
+
+                "batchPredictionResult",
+
+                JSON.stringify(
+                    result
+                )
+
+            );
+
+
+            /* =============================================
+               REDIRECIONAMENTO
+
+               A tela de carregamento permanece
+               aparecendo durante esse período.
+               ============================================= */
+
+            setTimeout(
+
+                () => {
+
+                    window.location.href =
+                        "resultado-lote.html";
+
+                },
+
+                2300
+
+            );
 
         }
+
+
         catch (error) {
-            csvStatus.textContent = error.message || "Não foi possível analisar o arquivo. Verifique a conexão com a API.";
-            csvStatus.classList.add("csv-error");
+
+            /* =============================================
+               ERRO AO PROCESSAR O ARQUIVO
+               ============================================= */
+
+            csvStatus.textContent =
+
+                error.message ||
+
+                "Não foi possível analisar o arquivo. " +
+                "Verifique a conexão com a API.";
+
+
+            csvStatus.classList.add(
+                "csv-error"
+            );
+
         }
+
+
         finally {
-            hideLoading();
-            batchSubmitButton.disabled = false;
+
+            /*
+               Em caso de sucesso, NÃO escondemos o
+               loading, pois ele deve permanecer até
+               resultado-lote.html abrir.
+
+               Em caso de erro, voltamos para a tela
+               de upload.
+            */
+
+            if (
+                csvStatus
+                    .classList
+                    .contains(
+                        "csv-error"
+                    )
+            ) {
+
+                hideLoading();
+
+
+                batchSubmitButton.disabled =
+                    false;
+
+            }
+
         }
 
     }
@@ -964,6 +1660,11 @@ batchPanel.addEventListener(
 
 checkApi();
 
-window.addEventListener("appmodechange", checkApi);
+
+window.addEventListener(
+    "appmodechange",
+    checkApi
+);
+
 
 calcVolume();

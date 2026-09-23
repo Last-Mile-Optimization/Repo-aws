@@ -1021,3 +1021,346 @@ input:focus {
 .batch-result-tag.ontime { background: rgba(100,179,145,.14); color: #2e7a5b; }
 @media (max-width: 620px) { .topbar-actions .app-mode-control { display: none; } .batch-summary { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .switch-thumb { transition: none; } }
+
+/* =========================================================
+   ESTILOS UNIFICADOS — RESULTADO EM LOTE
+   (style(1).css + style(2).css consolidados em style.css)
+   ========================================================= */
+.risco-alto { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.risco-baixo { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+.batch-summary-panel { margin-bottom: 32px; }
+.batch-stat-delay { background: #f8d7da; border-color: #f5c6cb; }
+.batch-stat-delay span, .batch-stat-delay strong { color: #721c24; }
+.batch-stat-ontime { background: #d4edda; border-color: #c3e6cb; }
+.batch-stat-ontime span, .batch-stat-ontime strong { color: #155724; }
+
+.batch-orders-section { margin-top: 10px; }
+.batch-section-heading { margin-bottom: 18px; }
+.batch-section-heading h2 { margin: 6px 0 8px; font-size: 30px; letter-spacing: -.03em; }
+.batch-accordion { display: grid; gap: 16px; }
+.order-accordion { background: rgba(255,255,255,.9); border: 1px solid rgba(19,36,50,.10); border-radius: 20px; box-shadow: 0 10px 34px rgba(19,36,50,.06); overflow: hidden; }
+.order-accordion[open] { box-shadow: var(--shadow); }
+.order-summary { list-style: none; cursor: pointer; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; user-select: none; }
+.order-summary::-webkit-details-marker { display: none; }
+.order-summary-main { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.order-summary-main strong, .order-summary-main span { display: block; }
+.order-summary-main strong { font-size: 16px; }
+.order-summary-main div > span { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.order-chevron { width: 30px; height: 30px; border-radius: 9px; display: grid !important; place-items: center; background: rgba(85,115,134,.09); font-size: 24px; line-height: 1; transition: transform .2s ease; }
+.order-accordion[open] .order-chevron { transform: rotate(90deg); }
+.order-content { padding: 24px; border-top: 1px solid var(--line); background: rgba(247,242,241,.36); }
+.order-content .panel, .order-content .result-card { box-shadow: 0 10px 30px rgba(19,36,50,.06); }
+.batch-result-grid, .batch-dashboard-grid { margin-bottom: 18px; }
+.batch-model-panel { margin-bottom: 0; }
+
+.batch-result-tag.delay { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.batch-result-tag.ontime { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+@media (max-width: 760px) {
+  .order-summary { align-items: flex-start; flex-direction: column; }
+  .order-summary .batch-result-tag { margin-left: 43px; }
+  .order-content { padding: 16px; }
+  .bar-row { grid-template-columns: 1fr; gap: 7px; }
+  .bar-percent { text-align: left; }
+  .model-row { grid-template-columns: 1fr 58px 82px; }
+  .model-row .model-track { grid-column: 1 / -1; grid-row: 2; }
+}
+
+
+/* =========================================================
+   RESULTADO EM LOTE
+   ========================================================= */
+
+.batch-summary-panel {
+    margin-bottom: 32px;
+}
+
+.batch-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 24px;
+}
+
+
+/* =========================================================
+   KPIs DO LOTE
+   ========================================================= */
+
+.batch-stat {
+    padding: 22px;
+    border-radius: 18px;
+    background: #f8f8f7;
+    border: 1px solid var(--line);
+}
+
+.batch-stat span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.batch-stat strong {
+    display: block;
+    font-size: 34px;
+    letter-spacing: -0.04em;
+}
+
+
+/* COM RISCO DE ATRASO */
+
+.batch-stat-delay strong {
+    color: #721c24;
+}
+
+
+/* DENTRO DO PRAZO */
+
+.batch-stat-ontime strong {
+    color: #155724;
+}
+
+
+/* =========================================================
+   ÁREA DOS PEDIDOS
+   ========================================================= */
+
+.batch-orders-section {
+    margin-top: 34px;
+}
+
+.batch-orders-heading {
+    margin-bottom: 20px;
+}
+
+.batch-orders-heading h2 {
+    margin: 6px 0 6px;
+    font-size: 28px;
+}
+
+.batch-orders-heading p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.batch-accordions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+
+/* =========================================================
+   ACCORDION
+   ========================================================= */
+
+.order-accordion {
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid rgba(19, 36, 50, .10);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+
+/* REMOVE SETA PADRÃO */
+
+.order-accordion > summary {
+    list-style: none;
+}
+
+.order-accordion > summary::-webkit-details-marker {
+    display: none;
+}
+
+
+/* =========================================================
+   CABEÇALHO DO ACCORDION
+   ========================================================= */
+
+.order-summary {
+    min-height: 90px;
+    padding: 20px 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    cursor: pointer;
+
+    user-select: none;
+
+    transition:
+        background .2s ease;
+}
+
+.order-summary:hover {
+    background: rgba(19, 36, 50, .025);
+}
+
+.order-summary-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.order-summary-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.order-summary-title strong {
+    font-size: 18px;
+}
+
+.order-summary-title span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   SETA DO ACCORDION
+   ========================================================= */
+
+.order-chevron {
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 10px;
+
+    background: rgba(19, 36, 50, .06);
+
+    font-size: 27px;
+    font-weight: 500;
+
+    transform: rotate(90deg);
+
+    transition:
+        transform .25s ease,
+        background .2s ease;
+}
+
+.order-accordion[open] .order-chevron {
+    transform: rotate(-90deg);
+    background: rgba(100, 179, 145, .15);
+}
+
+
+/* =========================================================
+   TAG DO RESULTADO
+   ========================================================= */
+
+.batch-result-tag {
+    padding: 8px 12px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: .04em;
+
+    white-space: nowrap;
+}
+
+.batch-result-tag.delay {
+    color: #721c24;
+    background: rgba(114, 28, 36, .10);
+}
+
+.batch-result-tag.ontime {
+    color: #155724;
+    background: rgba(21, 87, 36, .10);
+}
+
+
+/* =========================================================
+   CONTEÚDO ABERTO
+   ========================================================= */
+
+.order-content {
+    padding: 30px;
+
+    border-top:
+        1px solid var(--line);
+
+    background:
+        rgba(247, 242, 241, .45);
+}
+
+
+/* Espaçamento entre as seções */
+
+.order-content .result-grid {
+    margin-bottom: 24px;
+}
+
+.order-content .dashboard-grid {
+    margin-bottom: 24px;
+}
+
+
+/* =========================================================
+   ESTADO SEM FATORES
+   ========================================================= */
+
+.batch-empty-state {
+    padding: 24px;
+
+    border:
+        1px dashed var(--line);
+
+    border-radius: 14px;
+
+    color: var(--muted);
+
+    line-height: 1.6;
+
+    text-align: center;
+
+    background:
+        rgba(255, 255, 255, .55);
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .batch-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .order-summary {
+        align-items: flex-start;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .order-summary {
+        flex-direction: column;
+    }
+
+    .batch-result-tag {
+        margin-left: 50px;
+    }
+
+    .order-content {
+        padding: 18px;
+    }
+
+}

@@ -1,25 +1,221 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resultado da análise em lote</title>
-  <link rel="stylesheet" href="css/style.css" />
+
+  <title>
+    Resultado da análise em lote
+  </title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/resultado.css">
+  <link rel="stylesheet" href="css/resultado-lote.css">
 </head>
+
+
 <body>
+
+  <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
   <header class="topbar">
-    <div class="brand"><div class="brand-mark">P</div><div><strong>Predict Delivery</strong><span>Predição de atrasos em entregas</span></div></div>
-    <div class="topbar-actions">
-      <div class="app-mode-control"><span id="appModeLabel">Modo teste</span><button type="button" id="appModeSwitch" class="mode-switch" role="switch" aria-checked="true" aria-label="Alternar entre modo teste e API"><span class="switch-thumb"></span></button></div>
-      <a class="button ghost compact" href="index.html">← Nova análise</a>
+
+    <div class="brand">
+
+      <div class="brand-mark">
+        P
+      </div>
+
+      <div>
+        <strong>
+          Predict Delivery
+        </strong>
+
+        <span>
+          Predição de atrasos em entregas
+        </span>
+      </div>
+
     </div>
+
+
+    <div class="topbar-actions">
+
+      <div class="app-mode-control">
+
+        <span id="appModeLabel">
+          Modo teste
+        </span>
+
+        <button type="button" id="appModeSwitch" class="mode-switch" role="switch" aria-checked="true"
+          aria-label="Alternar entre modo teste e API">
+          <span class="switch-thumb"></span>
+        </button>
+
+      </div>
+
+
+      <a class="button ghost compact" href="index.html">
+        ← Nova análise
+      </a>
+
+    </div>
+
   </header>
+
+
+
+  <!-- =====================================================
+         CONTEÚDO
+         ===================================================== -->
+
   <main class="page-shell result-page">
-    <section class="result-header"><div><span class="eyebrow">Resultado em lote</span><h1>Diagnóstico dos pedidos</h1><p id="batchDescription">Resumo das previsões geradas para o arquivo enviado.</p></div><div class="analysis-id">ID <strong id="batchAnalysisId">—</strong></div></section>
-    <section class="panel"><div class="batch-summary" id="batchSummary"></div></section>
-    <section class="panel"><div class="panel-heading"><div><span class="eyebrow">Pedidos analisados</span><h2>Resultado por pedido</h2></div><span class="tag" id="batchModeTag">—</span></div><div class="batch-table-wrap"><table class="batch-table"><thead><tr><th>Pedido</th><th>Risco</th><th>Probabilidade</th><th>Distância</th><th>Frete</th><th>Classificação</th></tr></thead><tbody id="batchResults"></tbody></table></div></section>
+
+
+    <!-- =================================================
+             CABEÇALHO
+             ================================================= -->
+
+    <section class="result-header">
+
+      <div>
+
+        <span class="eyebrow">
+          Resultado da análise em lote
+        </span>
+
+        <h1>
+          Diagnóstico dos pedidos
+        </h1>
+
+        <p id="batchDescription">
+          Resumo das previsões geradas para os pedidos enviados.
+        </p>
+
+      </div>
+
+
+      <div class="analysis-id">
+
+        ID
+
+        <strong id="batchAnalysisId">
+          —
+        </strong>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+             KPIs GERAIS DO LOTE
+             ================================================= -->
+
+    <section class="panel batch-summary-panel">
+
+      <div class="panel-heading">
+
+        <div>
+
+          <span class="eyebrow">
+            Visão geral
+          </span>
+
+          <h2>
+            Resumo da análise
+          </h2>
+
+        </div>
+
+
+        <span class="tag" id="batchModeTag">
+          —
+        </span>
+
+      </div>
+
+
+      <div class="batch-summary" id="batchSummary">
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+             LISTA DE PEDIDOS
+             ================================================= -->
+
+    <section class="batch-orders-section">
+
+      <div class="batch-orders-heading">
+
+        <div>
+
+          <span class="eyebrow">
+            Pedidos analisados
+          </span>
+
+          <h2>
+            Resultado por pedido
+          </h2>
+
+          <p>
+            Clique em um pedido para visualizar
+            todos os detalhes da previsão.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!--
+                O JavaScript adicionará aqui:
+
+                Pedido #1
+                Pedido #2
+                Pedido #3
+                ...
+            -->
+
+      <div class="batch-accordions" id="batchResults">
+      </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+             BOTÃO FINAL
+             ================================================= -->
+
+    <div class="bottom-actions">
+
+      <a class="button primary" href="index.html">
+        ← Analisar outros pedidos
+      </a>
+
+    </div>
+
   </main>
+
+
+
+  <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
   <script src="js/app-mode.js"></script>
+
   <script src="js/resultado-lote.js"></script>
+
 </body>
+
 </html>
