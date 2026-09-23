@@ -1,0 +1,513 @@
+/* =========================================================
+   PAINEL DE RESUMO
+   ========================================================= */
+
+.batch-summary-panel {
+    margin-bottom:
+        32px;
+}
+
+.batch-summary {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap:
+        18px;
+
+    margin-top:
+        24px;
+}
+
+
+/* =========================================================
+   KPIs GERAIS
+   ========================================================= */
+
+.batch-stat {
+    padding:
+        22px;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:
+        18px;
+
+    background:
+        #fbfbfb;
+}
+
+.batch-stat span,
+.batch-stat strong {
+    display:
+        block;
+}
+
+.batch-stat span {
+    color:
+        var(--muted);
+
+    font-size:
+        12px;
+}
+
+.batch-stat strong {
+    margin-top:
+        6px;
+
+    font-size:
+        34px;
+
+    letter-spacing:
+        -.04em;
+}
+
+
+/* =========================================================
+   KPI RISCO DE ATRASO
+   ========================================================= */
+
+.batch-stat-delay {
+    background:
+        rgba(114, 28, 36, .045);
+
+    border-color:
+        rgba(114, 28, 36, .12);
+}
+
+.batch-stat-delay span,
+.batch-stat-delay strong {
+    color:
+        #721c24;
+}
+
+
+/* =========================================================
+   KPI DENTRO DO PRAZO
+   ========================================================= */
+
+.batch-stat-ontime {
+    background:
+        rgba(21, 87, 36, .045);
+
+    border-color:
+        rgba(21, 87, 36, .12);
+}
+
+.batch-stat-ontime span,
+.batch-stat-ontime strong {
+    color:
+        #155724;
+}
+
+
+/* =========================================================
+   LISTA DE PEDIDOS
+   ========================================================= */
+
+.batch-orders-section {
+    margin-top:
+        34px;
+}
+
+.batch-orders-heading {
+    margin-bottom:
+        20px;
+}
+
+.batch-orders-heading h2 {
+    margin:
+        6px 0;
+
+    font-size:
+        28px;
+
+    letter-spacing:
+        -.03em;
+}
+
+.batch-orders-heading p {
+    margin:
+        0;
+
+    color:
+        var(--muted);
+
+    line-height:
+        1.6;
+}
+
+.batch-accordions {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        16px;
+}
+
+
+/* =========================================================
+   ACCORDION
+   ========================================================= */
+
+.order-accordion {
+    background:
+        rgba(255, 255, 255, .92);
+
+    border:
+        1px solid
+        rgba(19, 36, 50, .10);
+
+    border-radius:
+        20px;
+
+    box-shadow:
+        var(--shadow);
+
+    overflow:
+        hidden;
+}
+
+
+/* =========================================================
+   REMOVE MARCADOR NATIVO
+   ========================================================= */
+
+.order-accordion > summary {
+    list-style:
+        none;
+}
+
+.order-accordion >
+summary::-webkit-details-marker {
+    display:
+        none;
+}
+
+
+/* =========================================================
+   CABEÇALHO DO ACCORDION
+   ========================================================= */
+
+.order-summary {
+    min-height:
+        90px;
+
+    padding:
+        20px 24px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    cursor:
+        pointer;
+
+    user-select:
+        none;
+
+    transition:
+        background .2s ease;
+}
+
+.order-summary:hover {
+    background:
+        rgba(19, 36, 50, .025);
+}
+
+.order-accordion[open]
+.order-summary {
+    background:
+        rgba(19, 36, 50, .018);
+}
+
+
+/* =========================================================
+   INFORMAÇÕES DO PEDIDO
+   ========================================================= */
+
+.order-summary-main {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        16px;
+}
+
+.order-summary-title {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        5px;
+}
+
+.order-summary-title strong {
+    font-size:
+        18px;
+}
+
+.order-summary-title span {
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+}
+
+
+/* =========================================================
+   SETA
+   ========================================================= */
+
+.order-chevron {
+    width:
+        34px;
+
+    height:
+        34px;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    flex-shrink:
+        0;
+
+    border-radius:
+        10px;
+
+    background:
+        rgba(19, 36, 50, .06);
+
+    font-size:
+        27px;
+
+    line-height:
+        1;
+
+    transform:
+        rotate(90deg);
+
+    transition:
+        transform .25s ease,
+        background .2s ease;
+}
+
+.order-accordion[open]
+.order-chevron {
+    transform:
+        rotate(-90deg);
+
+    background:
+        rgba(100, 179, 145, .15);
+}
+
+
+/* =========================================================
+   CLASSIFICAÇÃO
+   ========================================================= */
+
+.batch-result-tag {
+    display:
+        inline-block;
+
+    padding:
+        8px 12px;
+
+    border-radius:
+        999px;
+
+    font-size:
+        10px;
+
+    font-weight:
+        900;
+
+    letter-spacing:
+        .04em;
+
+    white-space:
+        nowrap;
+}
+
+.batch-result-tag.delay {
+    background:
+        rgba(114, 28, 36, .10);
+
+    color:
+        #721c24;
+}
+
+.batch-result-tag.ontime {
+    background:
+        rgba(21, 87, 36, .10);
+
+    color:
+        #155724;
+}
+
+
+/* =========================================================
+   CONTEÚDO DO ACCORDION
+   ========================================================= */
+
+.order-content {
+    padding:
+        30px;
+
+    border-top:
+        1px solid
+        var(--line);
+
+    background:
+        rgba(247, 242, 241, .45);
+}
+
+
+/*
+   Os cards dentro do accordion utilizam
+   resultado.css. Aqui ajustamos apenas o
+   comportamento deles dentro do lote.
+*/
+
+.order-content
+.result-grid {
+    margin-bottom:
+        24px;
+}
+
+.order-content
+.dashboard-grid {
+    margin-bottom:
+        24px;
+}
+
+
+/*
+   Remove margem duplicada do último
+   painel dentro do pedido.
+*/
+
+.order-content >
+.panel:last-child {
+    margin-bottom:
+        0;
+}
+
+
+/* =========================================================
+   ESTADO SEM FATORES
+   ========================================================= */
+
+.batch-empty-state {
+    padding:
+        24px;
+
+    border:
+        1px dashed
+        var(--line);
+
+    border-radius:
+        14px;
+
+    color:
+        var(--muted);
+
+    line-height:
+        1.6;
+
+    text-align:
+        center;
+
+    background:
+        rgba(255, 255, 255, .55);
+}
+
+
+/* =========================================================
+   DESTAQUE OPCIONAL DO ACCORDION
+   ========================================================= */
+
+.order-accordion.delay {
+    border-left:
+        4px solid
+        rgba(114, 28, 36, .65);
+}
+
+.order-accordion.ontime {
+    border-left:
+        4px solid
+        rgba(21, 87, 36, .65);
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .batch-summary {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+@media (max-width: 620px) {
+
+    .order-summary {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+        padding:
+            18px;
+    }
+
+    .batch-result-tag {
+        margin-left:
+            50px;
+    }
+
+    .order-content {
+        padding:
+            18px;
+    }
+
+    .order-summary-title strong {
+        font-size:
+            16px;
+    }
+
+}

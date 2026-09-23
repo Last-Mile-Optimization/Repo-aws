@@ -1,0 +1,975 @@
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+    display:
+        grid;
+
+    grid-template-columns:
+        1.4fr .8fr;
+
+    gap:
+        44px;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        40px;
+}
+
+.hero h1 {
+    font-size:
+        clamp(
+            38px,
+            6vw,
+            68px
+        );
+
+    line-height:
+        .98;
+
+    letter-spacing:
+        -.055em;
+
+    max-width:
+        850px;
+
+    margin:
+        10px 0 18px;
+}
+
+.hero p {
+    color:
+        var(--muted);
+
+    font-size:
+        18px;
+
+    line-height:
+        1.7;
+
+    max-width:
+        760px;
+}
+
+
+/* =========================================================
+   CARD "COMO FUNCIONA"
+   ========================================================= */
+
+.hero-card {
+    background:
+        rgba(255, 255, 255, .9);
+
+    border:
+        1px solid
+        rgba(19, 36, 50, .08);
+
+    border-radius:
+        var(--radius);
+
+    box-shadow:
+        var(--shadow);
+
+    padding:
+        24px;
+}
+
+.hero-card > strong {
+    display:
+        block;
+
+    margin-bottom:
+        16px;
+}
+
+.flow-step {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    padding:
+        12px 0;
+
+    color:
+        var(--muted);
+
+    border-top:
+        1px solid
+        var(--line);
+}
+
+.flow-step span {
+    width:
+        28px;
+
+    height:
+        28px;
+
+    border-radius:
+        9px;
+
+    background:
+        var(--navy);
+
+    color:
+        white;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    font-size:
+        12px;
+
+    font-weight:
+        800;
+}
+
+
+/* =========================================================
+   FORMULÁRIO
+   ========================================================= */
+
+.form-card {
+    background:
+        rgba(255, 255, 255, .9);
+
+    border:
+        1px solid
+        rgba(19, 36, 50, .08);
+
+    border-radius:
+        var(--radius);
+
+    box-shadow:
+        var(--shadow);
+
+    padding:
+        clamp(
+            24px,
+            4vw,
+            44px
+        );
+}
+
+
+/* =========================================================
+   CABEÇALHO DO FORM
+   ========================================================= */
+
+.section-heading,
+.submit-row {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    align-items:
+        center;
+}
+
+.section-heading h2 {
+    margin:
+        6px 0 0;
+
+    font-size:
+        26px;
+
+    letter-spacing:
+        -.03em;
+}
+
+
+/* =========================================================
+   SEÇÕES DO FORM
+   ========================================================= */
+
+.form-section {
+    padding:
+        34px 0;
+
+    border-top:
+        1px solid
+        var(--line);
+}
+
+.form-section:first-of-type {
+    margin-top:
+        28px;
+}
+
+.form-section-title {
+    display:
+        flex;
+
+    gap:
+        14px;
+
+    align-items:
+        flex-start;
+
+    margin-bottom:
+        22px;
+}
+
+.form-section-title h3 {
+    margin:
+        0 0 4px;
+}
+
+.form-section-title p {
+    margin:
+        0;
+
+    color:
+        var(--muted);
+
+    line-height:
+        1.55;
+}
+
+.number {
+    min-width:
+        34px;
+
+    height:
+        34px;
+
+    border-radius:
+        10px;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    background:
+        rgba(100, 179, 145, .16);
+
+    color:
+        #357f63;
+
+    font-weight:
+        800;
+
+    font-size:
+        12px;
+}
+
+
+/* =========================================================
+   GRIDS
+   ========================================================= */
+
+.grid {
+    display:
+        grid;
+
+    gap:
+        18px;
+}
+
+.grid-4 {
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+}
+
+.grid-2 {
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+}
+
+
+/* =========================================================
+   LABELS E INPUTS
+   ========================================================= */
+
+label > span:first-child {
+    display:
+        block;
+
+    font-weight:
+        700;
+
+    font-size:
+        13px;
+
+    margin-bottom:
+        8px;
+}
+
+input {
+    width:
+        100%;
+
+    border:
+        1px solid
+        #d9d8d6;
+
+    background:
+        #fbfbfb;
+
+    color:
+        var(--navy);
+
+    border-radius:
+        13px;
+
+    padding:
+        14px;
+
+    outline:
+        none;
+
+    transition:
+        .2s;
+}
+
+input:focus {
+    border-color:
+        var(--green);
+
+    box-shadow:
+        0 0 0 4px
+        rgba(100, 179, 145, .14);
+}
+
+
+/* =========================================================
+   PREFIX / SUFIX
+   ========================================================= */
+
+.input-prefix,
+.input-suffix {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    background:
+        #fbfbfb;
+
+    border:
+        1px solid
+        #d9d8d6;
+
+    border-radius:
+        13px;
+
+    overflow:
+        hidden;
+}
+
+.input-prefix:focus-within,
+.input-suffix:focus-within {
+    border-color:
+        var(--green);
+
+    box-shadow:
+        0 0 0 4px
+        rgba(100, 179, 145, .14);
+}
+
+.input-prefix span,
+.input-suffix span {
+    padding:
+        0 13px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+
+    white-space:
+        nowrap;
+}
+
+.input-prefix input,
+.input-suffix input {
+    border:
+        0;
+
+    border-radius:
+        0;
+
+    box-shadow:
+        none !important;
+}
+
+
+/* =========================================================
+   VOLUME CALCULADO
+   ========================================================= */
+
+.derived-box {
+    margin-top:
+        16px;
+
+    display:
+        inline-flex;
+
+    gap:
+        12px;
+
+    padding:
+        10px 14px;
+
+    border-radius:
+        12px;
+
+    background:
+        rgba(85, 115, 134, .08);
+
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+}
+
+.derived-box strong {
+    color:
+        var(--navy);
+}
+
+
+/* =========================================================
+   MESMA CIDADE
+   ========================================================= */
+
+.toggle-field {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        flex-end;
+}
+
+.segmented {
+    display:
+        flex;
+
+    padding:
+        4px;
+
+    border-radius:
+        13px;
+
+    background:
+        #ecebea;
+
+    width:
+        fit-content;
+}
+
+.segmented-option {
+    border:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--muted);
+
+    padding:
+        10px 18px;
+
+    border-radius:
+        10px;
+
+    cursor:
+        pointer;
+
+    font-weight:
+        700;
+}
+
+.segmented-option.active {
+    background:
+        white;
+
+    color:
+        var(--navy);
+
+    box-shadow:
+        0 4px 12px
+        rgba(19, 36, 50, .08);
+}
+
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.features-preview {
+    display:
+        grid;
+
+    grid-template-columns:
+        .8fr 1.2fr;
+
+    gap:
+        20px;
+
+    padding:
+        24px;
+
+    border-radius:
+        20px;
+
+    background:
+        var(--navy);
+
+    color:
+        white;
+}
+
+.features-preview h3 {
+    margin:
+        6px 0;
+}
+
+.features-preview p {
+    margin:
+        0;
+
+    color:
+        rgba(255, 255, 255, .66);
+}
+
+.features-preview .eyebrow {
+    color:
+        #a9c1cc;
+}
+
+.feature-chips {
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        8px;
+
+    align-content:
+        center;
+}
+
+.feature-chips span {
+    border-radius:
+        999px;
+
+    padding:
+        8px 11px;
+
+    background:
+        rgba(255, 255, 255, .09);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, .12);
+
+    color:
+        #dce7eb;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+}
+
+
+/* =========================================================
+   SUBMIT
+   ========================================================= */
+
+.submit-row {
+    margin-top:
+        26px;
+}
+
+.privacy-note {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        3px;
+}
+
+.privacy-note span {
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+}
+
+
+/* =========================================================
+   MODO UM PEDIDO / VÁRIOS PEDIDOS
+   ========================================================= */
+
+.simulation-mode {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+}
+
+.mode-label {
+    font-size:
+        13px;
+
+    color:
+        var(--muted);
+}
+
+.mode-label.active {
+    color:
+        var(--navy);
+
+    font-weight:
+        800;
+}
+
+
+/* =========================================================
+   CSV
+   ========================================================= */
+
+.csv-upload {
+    padding:
+        clamp(
+            16px,
+            3vw,
+            28px
+        );
+
+    border:
+        2px dashed
+        var(--line);
+
+    border-radius:
+        var(--radius-sm);
+
+    background:
+        #fbfbfb;
+}
+
+.csv-upload input {
+    background:
+        white;
+}
+
+.csv-upload
+input::file-selector-button {
+    border:
+        0;
+
+    border-radius:
+        8px;
+
+    padding:
+        10px 12px;
+
+    margin-right:
+        12px;
+
+    background:
+        var(--navy);
+
+    color:
+        white;
+
+    cursor:
+        pointer;
+}
+
+.csv-upload p {
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+
+    line-height:
+        1.6;
+
+    overflow-wrap:
+        anywhere;
+}
+
+.csv-upload
+.csv-error {
+    color:
+        #a23b22;
+}
+
+.csv-actions {
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        10px;
+
+    margin-top:
+        14px;
+}
+
+#removeCsv:focus-visible {
+    outline:
+        3px solid
+        var(--blue-gray);
+
+    outline-offset:
+        4px;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.loading-overlay {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    background:
+        rgba(19, 36, 50, .52);
+
+    backdrop-filter:
+        blur(9px);
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    z-index:
+        50;
+
+    padding:
+        20px;
+}
+
+.loading-overlay.hidden {
+    display:
+        none;
+}
+
+.loading-card {
+    width:
+        min(
+            520px,
+            100%
+        );
+
+    padding:
+        36px;
+
+    background:
+        white;
+
+    border-radius:
+        28px;
+
+    box-shadow:
+        0 24px 80px
+        rgba(0, 0, 0, .22);
+}
+
+.loading-card h2 {
+    margin-bottom:
+        6px;
+}
+
+.loading-card p {
+    color:
+        var(--muted);
+
+    line-height:
+        1.5;
+}
+
+.spinner {
+    width:
+        46px;
+
+    height:
+        46px;
+
+    border-radius:
+        50%;
+
+    border:
+        4px solid
+        #e8e8e8;
+
+    border-top-color:
+        var(--green);
+
+    animation:
+        spin 1s linear infinite;
+}
+
+@keyframes spin {
+
+    to {
+        transform:
+            rotate(360deg);
+    }
+
+}
+
+.loading-steps {
+    margin-top:
+        22px;
+
+    display:
+        grid;
+
+    gap:
+        10px;
+}
+
+.loading-step {
+    color:
+        #9aa4aa;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    font-size:
+        13px;
+}
+
+.loading-step span {
+    width:
+        8px;
+
+    height:
+        8px;
+
+    background:
+        #dadada;
+
+    border-radius:
+        50%;
+}
+
+.loading-step.active {
+    color:
+        var(--navy);
+
+    font-weight:
+        700;
+}
+
+.loading-step.active span {
+    background:
+        var(--green);
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .hero,
+    .features-preview {
+        grid-template-columns:
+            1fr;
+    }
+
+    .grid-4,
+    .grid-2 {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+@media (max-width: 620px) {
+
+    .grid-4,
+    .grid-2 {
+        grid-template-columns:
+            1fr;
+    }
+
+    .section-heading,
+    .submit-row {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+    .submit-row
+    .button {
+        width:
+            100%;
+    }
+
+    .form-card {
+        padding:
+            22px;
+    }
+
+}

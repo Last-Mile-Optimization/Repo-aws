@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware # 1. IMPORTAR O CORS
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import pandas as pd
@@ -8,22 +8,36 @@ import io
 import os
 
 app = FastAPI(title="API Previsão de Atrasos - TCC")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# ADICIONAR O MIDDLEWARE DE CORS (Permite requisições do front local)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # Permite acesso de qualquer origem
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# CRIAR A ROTA DE HEALTH CHECK ESPERADA PELO FRONTEND
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "API Online"}
 
-# 1. Estrutura com as 14 variáveis exatas do modelo
+FEATURES = [
+    'holiday_at_purchase', 'is_holiday_in_7_days', 'is_holiday_in_14_days',
+    'had_holiday_7_days_ago', 'purchase_hour', 'purchase_day_of_week',
+    'is_weekend', 'price', 'freight_value', 'product_weight_g',
+    'volume_cm3', 'distance_km', 'same_city', 'prazo_transportadora_dias'
+]
+
+FEATURE_LABELS = {
+    'holiday_at_purchase': 'Feriado na compra',
+    'is_holiday_in_7_days': 'Feriado nos próximos 7 dias',
+    'is_holiday_in_14_days': 'Feriado nos próximos 14 dias',
+    'had_holiday_7_days_ago': 'Feriado nos últimos 7 dias',
+    'purchase_hour': 'Horário da compra',
+    'purchase_day_of_week': 'Dia da semana',
+    'is_weekend': 'Fim de semana',
+    'price': 'Valor do produto',
+    'freight_value': 'Valor do frete',
+    'product_weight_g': 'Peso do produto',
+    'volume_cm3': 'Volume do produto',
+    'distance_km': 'Distância da entrega',
+    'same_city': 'Mesma cidade',
+    'prazo_transportadora_dias': 'Prazo da transportadora'
+}
+
 class DadosEntrega(BaseModel):
     holiday_at_purchase: int
     is_holiday_in_7_days: int
@@ -40,103 +54,103 @@ class DadosEntrega(BaseModel):
     same_city: int
     prazo_transportadora_dias: int
 
-# 2. Carregamento do dicionário (Modelo + Limiar Otimizado)
 modelo = None
-limiar_atraso = 0.50 # Fallback de segurança
-
+limiar_atraso = 0.50
 if os.path.exists('modelo_treinado_xgboost.pkl'):
     with open('modelo_treinado_xgboost.pkl', 'rb') as f:
         dados_exportacao = pickle.load(f)
         modelo = dados_exportacao['modelo']
         limiar_atraso = dados_exportacao['limiar']
 
-# ==========================================
-# MOTOR CENTRAL DE PREDIÇÃO
-# ==========================================
+def nivel_risco(prob):
+    if prob < .30: return "Baixo"
+    if prob < .61: return "Moderado"
+    if prob < .81: return "Alto"
+    return "Muito alto"
+
+def fatores_locais(input_df):
+    """Tenta obter contribuições locais do XGBoost; cai para importâncias globais se necessário."""
+    if modelo is None:
+        return []
+    impactos = None
+    try:
+        import xgboost as xgb
+        booster = modelo.get_booster()
+        contrib = booster.predict(xgb.DMatrix(input_df), pred_contribs=True)[0][:-1]
+        impactos = dict(zip(FEATURES, map(abs, contrib)))
+    except Exception:
+        try:
+            importances = modelo.feature_importances_
+            impactos = dict(zip(FEATURES, map(float, importances)))
+        except Exception:
+            return []
+
+    top = sorted(impactos.items(), key=lambda item: item[1], reverse=True)[:5]
+    maior = max((valor for _, valor in top), default=0) or 1
+    return [{"name": FEATURE_LABELS.get(nome, nome), "impact": round(valor / maior * 100)} for nome, valor in top]
+
 def calcular_risco_motor(dados_dict):
-    """
-    Função central que roda o modelo XGBoost.
-    Recebe um dicionário com os dados de um pedido.
-    """
+    dados_dict = {feat: dados_dict.get(feat, 0) for feat in FEATURES}
+    input_df = pd.DataFrame([dados_dict], columns=FEATURES)
+
     if modelo is not None:
-        # Transforma o dicionário em um DataFrame de 1 linha.
-        # Isso garante que o XGBoost receba os nomes das colunas na ordem correta.
-        input_df = pd.DataFrame([dados_dict])
-        
-        # Pega a probabilidade da classe 1 (Atraso)
         probabilidade = float(modelo.predict_proba(input_df)[0][1])
-        
-        # Aplica o limiar otimizado do Optuna (ex: 0.17)
         atraso = bool(probabilidade >= limiar_atraso)
     else:
-        # SIMULAÇÃO (Caso o arquivo .pkl não seja encontrado)
         probabilidade = 0.85 if dados_dict.get('is_weekend') == 1 else 0.15
         if dados_dict.get('distance_km', 0) > 50:
             probabilidade += 0.1
-            
         probabilidade = min(probabilidade, 0.99)
         atraso = probabilidade >= limiar_atraso
 
     return {
         "previsao_atraso": atraso,
-        "probabilidade": probabilidade
+        "prediction": 1 if atraso else 0,
+        "probabilidade": probabilidade,
+        "probability": probabilidade,
+        "risk_level": nivel_risco(probabilidade),
+        "main_model": "XGBoost",
+        "models": [{"name": "XGBoost", "probability": probabilidade, "prediction": 1 if atraso else 0}],
+        "factors": fatores_locais(input_df),
+        "input": dados_dict
     }
 
-# ==========================================
-# ENDPOINT 1: PREDIÇÃO INDIVIDUAL (JSON)
-# ==========================================
 @app.post("/predict")
 def prever_atraso_individual(dados: DadosEntrega):
-    # dados.dict() converte o objeto Pydantic em um dicionário do Python
     return calcular_risco_motor(dados.dict())
 
-
-# ==========================================
-# ENDPOINT 2: PREDIÇÃO EM LOTE (CSV)
-# ==========================================
 @app.post("/predict-batch")
 async def prever_atraso_lote(file: UploadFile = File(...)):
-    if not file.filename.endswith('.csv'):
+    if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="O arquivo deve ser um .csv")
-
     try:
-        # Lê o CSV enviado pelo usuário na tela
         conteudo = await file.read()
         df = pd.read_csv(io.StringIO(conteudo.decode('utf-8')))
-        
+        faltantes = [feat for feat in FEATURES if feat not in df.columns]
+        if faltantes:
+            raise HTTPException(status_code=400, detail=f"Colunas obrigatórias ausentes: {', '.join(faltantes)}")
+
         resultados_lote = []
-        
-        # Colunas obrigatórias que o modelo precisa
-        features_necessarias = [
-            'holiday_at_purchase', 'is_holiday_in_7_days', 'is_holiday_in_14_days',
-            'had_holiday_7_days_ago', 'purchase_hour', 'purchase_day_of_week',
-            'is_weekend', 'price', 'freight_value', 'product_weight_g',
-            'volume_cm3', 'distance_km', 'same_city', 'prazo_transportadora_dias'
-        ]
-        
-        # Itera linha a linha no CSV
         for index, row in df.iterrows():
-            # Extrai apenas as variáveis que o modelo conhece e converte para dicionário
-            dados_dict = {feat: row.get(feat, 0) for feat in features_necessarias}
-            
-            # Chama o motor
+            dados_dict = {feat: row[feat] for feat in FEATURES}
             resultado = calcular_risco_motor(dados_dict)
-            
-            # Insere dados de apoio para exibir na tabela do frontend
             resultado['pedido_id'] = index + 1
-            resultado['distance_km'] = dados_dict['distance_km']
-            resultado['freight_value'] = dados_dict['freight_value']
-            
-            # Mantém a variável de resultado_real_atraso (se existir no CSV) para você validar
-            if 'resultado_real_atraso' in row:
+            if 'resultado_real_atraso' in df.columns and pd.notna(row.get('resultado_real_atraso')):
                 resultado['resultado_real'] = int(row['resultado_real_atraso'])
-                
             resultados_lote.append(resultado)
-            
-        return {"resultados": resultados_lote}
-        
+
+        atrasos = sum(1 for item in resultados_lote if item['previsao_atraso'])
+        return {
+            "analysis_id": f"LOTE-{pd.Timestamp.now().strftime('%Y%m%d%H%M%S')}",
+            "total": len(resultados_lote),
+            "delayed_count": atrasos,
+            "on_time_count": len(resultados_lote) - atrasos,
+            "resultados": resultados_lote,
+            "demo_mode": False
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
 
-# 4. Serve a pasta do frontend
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
