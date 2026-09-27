@@ -349,16 +349,16 @@ modelsChart.innerHTML =
    PERFIL DO PEDIDO
    ========================================================= */
 
-document.getElementById(
-    "clusterName"
-).textContent =
-    result.cluster.name;
+const clusterName = document.getElementById("clusterName");
+const clusterDescription = document.getElementById("clusterDescription");
 
+if (clusterName && result.cluster) {
+    clusterName.textContent = result.cluster.name;
+}
 
-document.getElementById(
-    "clusterDescription"
-).textContent =
-    result.cluster.description;
+if (clusterDescription && result.cluster) {
+    clusterDescription.textContent = result.cluster.description;
+}
 
 
 /*
