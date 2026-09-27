@@ -68,8 +68,9 @@ class DadosEntrega(BaseModel):
 
 modelo = None
 limiar_atraso = 0.50
-if os.path.exists('modelo_treinado_xgboost.pkl'):
-    with open('modelo_treinado_xgboost.pkl', 'rb') as f:
+CAMINHO_MODELO = os.path.join(os.path.dirname(__file__), 'modelo_treinado_xgboost.pkl')
+if os.path.exists(CAMINHO_MODELO):
+    with open(CAMINHO_MODELO, 'rb') as f:
         dados_exportacao = pickle.load(f)
         modelo = dados_exportacao['modelo']
         limiar_atraso = dados_exportacao['limiar']
@@ -102,19 +103,17 @@ def fatores_locais(input_df):
     return [{"name": FEATURE_LABELS.get(nome, nome), "impact": round(valor / maior * 100)} for nome, valor in top]
 
 def calcular_risco_motor(dados_dict):
+    if modelo is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Modelo de previsão não encontrado. Verifique o arquivo modelo_treinado_xgboost.pkl.",
+        )
+
     dados_dict = {feat: dados_dict.get(feat, 0) for feat in FEATURES}
     input_df = pd.DataFrame([dados_dict], columns=FEATURES)
 
-    # TODO: mudar lógica
-    if modelo is not None:
-        probabilidade = float(modelo.predict_proba(input_df)[0][1])
-        atraso = bool(probabilidade >= limiar_atraso)
-    else:
-        probabilidade = 0.85 if dados_dict.get('is_weekend') == 1 else 0.15
-        if dados_dict.get('distance_km', 0) > 50:
-            probabilidade += 0.1
-        probabilidade = min(probabilidade, 0.99)
-        atraso = probabilidade >= limiar_atraso
+    probabilidade = float(modelo.predict_proba(input_df)[0][1])
+    atraso = bool(probabilidade >= limiar_atraso)
 
     return {
         "previsao_atraso": atraso,
