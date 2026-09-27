@@ -127,6 +127,19 @@ def calcular_risco_motor(dados_dict):
         "input": dados_dict
     }
 
+
+def gerar_resultado_pedido(dados_dict, pedido_id=None, resultado_real=None):
+    """Gera a mesma estrutura de previsão para um pedido individual ou do lote."""
+    resultado = calcular_risco_motor(dados_dict)
+    resultado["features"] = resultado["input"].copy()
+
+    if pedido_id is not None:
+        resultado["pedido_id"] = pedido_id
+    if resultado_real is not None:
+        resultado["resultado_real"] = resultado_real
+
+    return resultado
+
 def _pascoa(ano: int) -> date:
     """Calcula a data da Páscoa pelo algoritmo de Meeus/Jones/Butcher."""
     a = ano % 19
@@ -278,12 +291,11 @@ def preparar_dados_individual(dados: DadosEntrega):
 def prever_atraso_individual(dados: DadosEntrega):
     try:
         dados_processados = preparar_dados_individual(dados)
-        resultado = calcular_risco_motor(dados_processados)
+        resultado = gerar_resultado_pedido(dados_processados)
 
         # Campos esperados por resultado.js.
         resultado["analysis_id"] = f"IND-{pd.Timestamp.now().strftime('%Y%m%d%H%M%S')}"
         resultado["demo_mode"] = False
-        resultado["features"] = dados_processados.copy()
         resultado["input"] = {
             "purchase_date": dados.purchase_date,
             "purchase_time": dados.purchase_time,
@@ -313,10 +325,14 @@ async def prever_atraso_lote(file: UploadFile = File(...)):
         resultados_lote = []
         for index, row in df.iterrows():
             dados_dict = {feat: row[feat] for feat in FEATURES}
-            resultado = calcular_risco_motor(dados_dict)
-            resultado['pedido_id'] = index + 1
+            resultado_real = None
             if 'resultado_real_atraso' in df.columns and pd.notna(row.get('resultado_real_atraso')):
-                resultado['resultado_real'] = int(row['resultado_real_atraso'])
+                resultado_real = int(row['resultado_real_atraso'])
+            resultado = gerar_resultado_pedido(
+                dados_dict,
+                pedido_id=index + 1,
+                resultado_real=resultado_real,
+            )
             resultados_lote.append(resultado)
 
         atrasos = sum(1 for item in resultados_lote if item['previsao_atraso'])
