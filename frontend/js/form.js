@@ -14,6 +14,7 @@ const csvFile = document.getElementById("csvFile");
 const csvStatus = document.getElementById("csvStatus");
 const removeCsv = document.getElementById("removeCsv");
 const batchSubmitButton = document.getElementById("batchSubmitButton");
+const formStatus = document.getElementById("formStatus");
 
 
 /* =========================================================
@@ -24,6 +25,8 @@ function fillTestExample() {
     const example = {
         purchaseDate: "2026-09-18",
         purchaseTime: "19:25",
+        carrierDatetime: "2026-09-19T08:30",
+        estimatedDeliveryDatetime: "2026-09-25T18:00",
         price: 349.90,
         freightValue: 47.50,
         weight: 2350,
@@ -31,6 +34,9 @@ function fillTestExample() {
         width: 32,
         length: 41,
         distance: 612.4,
+        customerCity: "santo andre",
+        sellerCity: "sao paulo",
+        categoryName: "health_beauty",
         sameCity: "0"
     };
 
@@ -86,6 +92,32 @@ function calcVolume() {
         )} cm³`;
 
     return volume;
+}
+
+function showFormError(message) {
+    if (!formStatus) return;
+    formStatus.textContent = message;
+    formStatus.hidden = false;
+}
+
+function clearFormError() {
+    if (!formStatus) return;
+    formStatus.textContent = "";
+    formStatus.hidden = true;
+}
+
+function getApiErrorMessage(errorBody, fallback) {
+    if (typeof errorBody?.detail === "string") {
+        return errorBody.detail;
+    }
+
+    if (Array.isArray(errorBody?.detail)) {
+        return errorBody.detail
+            .map(item => item.msg || "Dados inválidos")
+            .join(" ");
+    }
+
+    return fallback;
 }
 
 
@@ -484,6 +516,22 @@ function buildPayload() {
                 .value,
 
 
+        carrier_datetime:
+            document
+                .getElementById(
+                    "carrierDatetime"
+                )
+                .value,
+
+
+        estimated_delivery_datetime:
+            document
+                .getElementById(
+                    "estimatedDeliveryDatetime"
+                )
+                .value,
+
+
         price:
             Number(
                 document
@@ -557,7 +605,34 @@ function buildPayload() {
         same_city:
             Number(
                 sameCityInput.value
-            )
+            ),
+
+
+        customer_city:
+            document
+                .getElementById(
+                    "customerCity"
+                )
+                .value
+                .trim(),
+
+
+        seller_city:
+            document
+                .getElementById(
+                    "sellerCity"
+                )
+                .value
+                .trim(),
+
+
+        category_name:
+            document
+                .getElementById(
+                    "categoryName"
+                )
+                .value
+                .trim()
 
     };
 }
@@ -1227,6 +1302,8 @@ form.addEventListener(
         const payload =
             buildPayload();
 
+        clearFormError();
+
 
         /*
            Exibe a tela:
@@ -1295,8 +1372,16 @@ form.addEventListener(
 
                 if (!response.ok) {
 
+                    const errorBody =
+                        await response
+                            .json()
+                            .catch(() => ({}));
+
                     throw new Error(
-                        "Backend indisponível"
+                        getApiErrorMessage(
+                            errorBody,
+                            `Não foi possível analisar o pedido (HTTP ${response.status}).`
+                        )
                     );
 
                 }
@@ -1310,17 +1395,16 @@ form.addEventListener(
         }
 
 
-        catch {
+        catch (error) {
 
-            /*
-               Caso o backend esteja indisponível,
-               utiliza o modo demonstração.
-            */
+            hideLoading();
 
-            result =
-                demoPrediction(
-                    payload
-                );
+            showFormError(
+                error.message ||
+                "Não foi possível analisar o pedido. Verifique os dados e a conexão com a API."
+            );
+
+            return;
 
         }
 
@@ -1544,10 +1628,17 @@ batchPanel.addEventListener(
 
             if (!response.ok) {
 
+                const errorBody =
+                    await response
+                        .json()
+                        .catch(() => ({}));
+
                 throw new Error(
 
-                    `Não foi possível analisar o arquivo ` +
-                    `(HTTP ${response.status}).`
+                    getApiErrorMessage(
+                        errorBody,
+                        `Não foi possível analisar o arquivo (HTTP ${response.status}).`
+                    )
 
                 );
 
