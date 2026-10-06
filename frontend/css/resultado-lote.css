@@ -13,7 +13,7 @@
 
     grid-template-columns:
         repeat(
-            3,
+            2,
             minmax(0, 1fr)
         );
 
@@ -67,6 +67,184 @@
 
     letter-spacing:
         -.04em;
+}
+
+
+/* =========================================================
+   RESUMO POR MODELO
+   ========================================================= */
+
+.model-summary-block {
+    padding:
+        22px;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:
+        18px;
+
+    background:
+        #fbfbfb;
+}
+
+.model-summary-block.xgboost {
+    background:
+        rgba(32, 76, 99, .055);
+
+    border-color:
+        rgba(32, 76, 99, .24);
+}
+
+.model-summary-block.mlp {
+    background:
+        rgba(104, 76, 132, .045);
+
+    border-color:
+        rgba(104, 76, 132, .19);
+}
+
+.model-summary-heading {
+    display:
+        flex;
+
+    align-items:
+        flex-start;
+
+    justify-content:
+        space-between;
+
+    gap:
+        12px;
+}
+
+.model-summary-heading span {
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        .06em;
+
+    text-transform:
+        uppercase;
+}
+
+.model-summary-heading h3 {
+    margin:
+        0;
+
+    color:
+        var(--blue-gray);
+
+    font-size:
+        24px;
+
+    letter-spacing:
+        -.03em;
+}
+
+.model-summary-metrics {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        12px;
+
+    margin-top:
+        18px;
+}
+
+.model-summary-metric {
+    padding:
+        13px;
+
+    border:
+        1px solid
+        rgba(19, 36, 50, .10);
+
+    border-radius:
+        13px;
+
+    background:
+        rgba(255, 255, 255, .68);
+}
+
+.model-summary-metric span,
+.model-summary-metric strong {
+    display:
+        block;
+}
+
+.model-summary-metric span {
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.35;
+}
+
+.model-summary-metric strong {
+    margin-top:
+        6px;
+
+    color:
+        var(--blue-gray);
+
+    font-size:
+        26px;
+
+    letter-spacing:
+        -.04em;
+}
+
+.model-summary-metric.delay strong {
+    color:
+        #721c24;
+}
+
+.model-summary-metric.ontime strong {
+    color:
+        #155724;
+}
+
+.batch-stat-model {
+    background: rgba(32, 76, 99, .055);
+    border-color: rgba(32, 76, 99, .16);
+}
+
+.batch-stat-model strong {
+    color: var(--blue-gray);
+    font-size: 27px;
+}
+
+.batch-stat-model small {
+    margin-left: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.batch-stat-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
 }
 
 
@@ -277,6 +455,29 @@ summary::-webkit-details-marker {
 
     font-size:
         13px;
+}
+
+.order-summary-models {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+.order-model-probability {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 7px;
+    border-radius: 8px;
+    background: rgba(32, 76, 99, .07);
+    color: var(--blue-gray);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.order-model-probability strong {
+    color: var(--ink);
 }
 
 

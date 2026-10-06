@@ -320,6 +320,158 @@
         15px;
 }
 
+.model-factors-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap:
+        16px;
+}
+
+.model-factors-card {
+    padding:
+        18px;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:
+        16px;
+
+    background:
+        rgba(255, 255, 255, .58);
+}
+
+.model-factors-card.xgboost {
+    border-color:
+        rgba(32, 76, 99, .24);
+
+    background:
+        rgba(32, 76, 99, .045);
+}
+
+.model-factors-card.mlp {
+    border-color:
+        rgba(104, 76, 132, .20);
+
+    background:
+        rgba(104, 76, 132, .04);
+}
+
+.model-factors-heading {
+    display:
+        flex;
+
+    align-items:
+        baseline;
+
+    justify-content:
+        space-between;
+
+    gap:
+        10px;
+}
+
+.model-factors-heading span {
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        .06em;
+
+    text-transform:
+        uppercase;
+}
+
+.model-factors-heading h3 {
+    margin:
+        0;
+
+    color:
+        var(--blue-gray);
+
+    font-size:
+        20px;
+
+    letter-spacing:
+        -.03em;
+}
+
+.model-factors-method {
+    min-height:
+        34px;
+
+    margin:
+        10px 0 16px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.45;
+}
+
+/* Em cada cartão de modelo, a barra fica abaixo do nome e da porcentagem.
+   Assim ela não comprime ou empurra o percentual para fora do bloco. */
+.model-factors-card .bar-row {
+    grid-template-columns:
+        minmax(0, 1fr)
+        max-content;
+
+    grid-template-rows:
+        auto
+        auto;
+
+    gap:
+        6px 10px;
+}
+
+.model-factors-card .factor-label {
+    grid-column:
+        1;
+
+    grid-row:
+        1;
+}
+
+.model-factors-card .bar-percent {
+    grid-column:
+        2;
+
+    grid-row:
+        1;
+
+    align-self:
+        start;
+
+    white-space:
+        nowrap;
+}
+
+.model-factors-card .bar-track {
+    grid-column:
+        1 / -1;
+
+    grid-row:
+        2;
+
+    min-width:
+        0;
+}
+
 .bar-row {
     display:
         grid;
@@ -428,6 +580,73 @@
 
     gap:
         13px;
+}
+
+.factor-label {
+    min-width:
+        0;
+}
+
+.factor-label strong,
+.factor-label small {
+    display:
+        block;
+}
+
+.factor-label strong {
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+.factor-effect {
+    margin-top:
+        3px;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+}
+
+.factor-effect.increase {
+    color:
+        #721c24;
+}
+
+.factor-effect.decrease {
+    color:
+        #155724;
+}
+
+.model-probability-list {
+    display: grid;
+    gap: 8px;
+    margin: 14px 0 16px;
+}
+
+.model-probability-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .65);
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.model-probability-item strong {
+    color: var(--ink);
+    font-size: 14px;
 }
 
 .model-row {
@@ -729,6 +948,11 @@
 
     .result-grid,
     .dashboard-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .model-factors-grid {
         grid-template-columns:
             1fr;
     }

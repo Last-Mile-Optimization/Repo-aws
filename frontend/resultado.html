@@ -42,12 +42,13 @@
         <div class="prediction-badge" id="predictionBadge">—</div>
         <h2 id="predictionTitle">Carregando resultado...</h2>
         <p id="predictionDescription"></p>
-        <div class="model-caption">Modelo principal: <strong id="mainModelName">Deep Learning</strong></div>
+        <div class="model-caption">Modelo principal: <strong id="mainModelName">MLP (Rede Neural)</strong></div>
       </article>
 
       <article class="result-card probability-card">
-        <span class="eyebrow">Probabilidade de atraso</span>
+        <span class="eyebrow">Probabilidade do modelo principal</span>
         <div class="probability-number" id="probabilityNumber">0%</div>
+        <div class="model-probability-list" id="modelProbabilities" aria-label="Probabilidades por modelo"></div>
         <div class="risk-track">
           <div class="risk-fill" id="riskFill"></div>
         </div>
@@ -64,15 +65,15 @@
       <article class="panel panel-wide">
         <div class="panel-heading">
           <div>
-            <span class="eyebrow">Explicabilidade</span>
-            <h2>Fatores que influenciaram a previsão</h2>
+          <span class="eyebrow">Explicabilidade por modelo</span>
+          <h2>Fatores que influenciaram a previsão</h2>
           </div>
-          <span class="tag">Visão simplificada</span>
+          <span class="tag">XGBoost + MLP</span>
         </div>
         <p class="panel-description">
-          Quanto maior a barra, maior a influência daquele fator nesta previsão.
+          Cada bloco mostra os cinco fatores de maior impacto para aquele modelo.
         </p>
-        <div id="factorsChart" class="bar-chart"></div>
+        <div id="factorsChart" class="model-factors-grid"></div>
       </article>
 
       <article class="panel">
@@ -90,12 +91,12 @@
       <div class="panel-heading">
         <div>
           <span class="eyebrow">Comparativo</span>
-          <h2>Como os modelos avaliaram este pedido</h2>
+          <h2>Probabilidades por modelo</h2>
         </div>
-        <span class="tag">Não é ensemble</span>
+        <span class="tag">XGBoost + MLP</span>
       </div>
       <p class="panel-description">
-        Cada modelo é executado separadamente. O comparativo ajuda a visualizar concordâncias e divergências.
+        Cada modelo calcula o risco separadamente para o mesmo pedido. Não há combinação das probabilidades.
       </p>
       <div id="modelsChart" class="model-comparison"></div>
     </section>

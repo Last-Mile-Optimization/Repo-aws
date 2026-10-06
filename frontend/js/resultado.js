@@ -37,6 +37,42 @@ const isDelay =
     result.prediction === 1;
 
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/[&<>'"]/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;"
+        })[char]);
+}
+
+
+function isModelDelayed(model) {
+    if (model?.prediction === 1 || model?.prediction === true) {
+        return true;
+    }
+
+    if (model?.prediction === 0 || model?.prediction === false) {
+        return false;
+    }
+
+    const threshold = /xgboost/i.test(model?.name || "") ? .2 : .3;
+    return Number(model?.probability || 0) >= threshold;
+}
+
+
+const models =
+    Array.isArray(result.models) && result.models.length
+        ? result.models
+        : [{
+            name: result.main_model || "XGBoost",
+            probability: result.probability,
+            prediction: result.prediction
+        }];
+
+
 /* ID da análise */
 
 document.getElementById(
@@ -51,7 +87,7 @@ document.getElementById(
     "mainModelName"
 ).textContent =
     result.main_model ||
-    "Deep Learning";
+    "XGBoost";
 
 
 /* =========================================================
@@ -128,6 +164,19 @@ document.getElementById(
     `${probability}%`;
 
 
+document.getElementById(
+    "modelProbabilities"
+).innerHTML =
+    models
+        .map(model => `
+            <div class="model-probability-item">
+                <span>${escapeHtml(model.name)}</span>
+                <strong>${Math.round(Number(model.probability || 0) * 100)}%</strong>
+            </div>
+        `)
+        .join("");
+
+
 /* Nível de risco */
 
 document.getElementById(
@@ -147,34 +196,82 @@ const factorsChart =
     );
 
 
-factorsChart.innerHTML =
+function factorModelRank(model) {
+    return /xgboost/i.test(model?.name || "") ? 0 : 1;
+}
 
-    result.factors
-        .map(item => `
 
+function getFactorModels(result, availableModels) {
+    const received = Array.isArray(result.factors_by_model)
+        ? result.factors_by_model
+        : [];
+    const byName = new Map(
+        received.map(group => [String(group.name || "").toLowerCase(), group])
+    );
+    const fallbackFactors = Array.isArray(result.factors) ? result.factors : [];
+
+    return [...availableModels]
+        .sort((first, second) => factorModelRank(first) - factorModelRank(second))
+        .map(model => {
+            const key = String(model.name || "").toLowerCase();
+            const group = byName.get(key);
+            if (group) return group;
+
+            const isXgboost = /xgboost/i.test(model.name || "");
+            return {
+                name: model.name,
+                method: isXgboost
+                    ? "Fatores ainda não disponibilizados para este pedido."
+                    : "Sensibilidade do MLP ainda não disponibilizada para este pedido.",
+                factors: isXgboost ? fallbackFactors : []
+            };
+        });
+}
+
+
+function renderFactorRows(factors) {
+    if (!Array.isArray(factors) || !factors.length) {
+        return `<p class="panel-description">Nenhum fator pôde ser calculado para este modelo.</p>`;
+    }
+
+    return factors.map(item => {
+        const impact = Math.max(0, Math.min(100, Number(item.impact || 0)));
+        const increasesRisk = item.direction === "Aumenta o risco";
+        const effectClass = increasesRisk ? "increase" : "decrease";
+        const effectText = item.direction || "Impacto relativo";
+        return `
             <div class="bar-row">
-
-                <strong>
-                    ${item.name}
-                </strong>
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar-value"
-                        style="width: ${item.impact}%">
-                    </div>
-
+                <div class="factor-label">
+                    <strong>${escapeHtml(item.name)}</strong>
+                    <small class="factor-effect ${effectClass}">${escapeHtml(effectText)}</small>
                 </div>
-
-                <span class="bar-percent">
-                    ${item.impact}%
-                </span>
-
+                <div class="bar-track">
+                    <div class="bar-value" style="width: ${impact}%"></div>
+                </div>
+                <span class="bar-percent">${Math.round(impact)}%</span>
             </div>
+        `;
+    }).join("");
+}
 
-        `)
-        .join("");
+
+const factorModels = getFactorModels(result, models);
+
+factorsChart.innerHTML = factorModels
+    .map(model => {
+        const isXgboost = /xgboost/i.test(model.name || "");
+        return `
+            <article class="model-factors-card ${isXgboost ? "xgboost" : "mlp"}">
+                <div class="model-factors-heading">
+                    <span>Fatores do modelo</span>
+                    <h3>${escapeHtml(model.name)}</h3>
+                </div>
+                <p class="model-factors-method">${escapeHtml(model.method || "Impacto relativo das variáveis.")}</p>
+                <div class="bar-chart">${renderFactorRows(model.factors)}</div>
+            </article>
+        `;
+    })
+    .join("");
 
 
 /* =========================================================
@@ -279,7 +376,7 @@ const modelsChart =
 
 modelsChart.innerHTML =
 
-    result.models
+    models
         .map(model => {
 
             const modelProbability =
@@ -293,7 +390,7 @@ modelsChart.innerHTML =
                 <div class="model-row">
 
                     <span class="model-name">
-                        ${model.name}
+                        ${escapeHtml(model.name)}
                     </span>
 
 
@@ -319,7 +416,7 @@ modelsChart.innerHTML =
                         class="
                             model-prediction
                             ${
-                                model.prediction
+                                isModelDelayed(model)
                                     ? "delay"
                                     : "ontime"
                             }
@@ -327,7 +424,7 @@ modelsChart.innerHTML =
                     >
 
                         ${
-                            model.prediction
+                            isModelDelayed(model)
 
                                 ? "Atraso"
 

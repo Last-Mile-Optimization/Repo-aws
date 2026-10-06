@@ -227,30 +227,116 @@ function getRecommendation(
    FATORES
    ========================================================= */
 
-function getFactors(result) {
+function getFactorModels(result, availableModels) {
 
-    /*
-        Primeiro tenta usar os fatores reais
-        enviados pelo backend.
-    */
+    const received =
+        Array.isArray(result.factors_by_model)
+            ? result.factors_by_model
+            : [];
 
-    if (
-        Array.isArray(result.factors) &&
-        result.factors.length
-    ) {
+    const byName = new Map(
+        received.map(group => [
+            String(group.name || "").toLowerCase(),
+            group
+        ])
+    );
 
-        return result.factors;
+    const legacyFactors =
+        Array.isArray(result.factors)
+            ? result.factors
+            : [];
+
+    return [...availableModels]
+        .sort((first, second) => modelRank(first) - modelRank(second))
+        .map(model => {
+
+            const group = byName.get(
+                String(model.name || "").toLowerCase()
+            );
+
+            if (group) return group;
+
+            const isXgboost = /xgboost/i.test(model.name || "");
+
+            return {
+                name: model.name,
+                method: isXgboost
+                    ? "Fatores ainda não disponibilizados para este pedido."
+                    : "Sensibilidade do MLP ainda não disponibilizada para este pedido.",
+                factors: isXgboost ? legacyFactors : []
+            };
+
+        });
+
+}
+
+
+function renderFactorRows(factors) {
+
+    if (!Array.isArray(factors) || !factors.length) {
+
+        return `
+            <p class="panel-description">
+                Nenhum fator pôde ser calculado para este modelo.
+            </p>
+        `;
 
     }
 
+    return factors.map(factor => {
 
-    /*
-        Caso a API atual ainda não envie factors,
-        mostramos uma mensagem no lugar de inventar
-        explicabilidade.
-    */
+        const impact = Math.max(
+            0,
+            Math.min(100, Number(factor.impact || 0))
+        );
 
-    return [];
+        const increasesRisk =
+            factor.direction === "Aumenta o risco";
+
+        return `
+            <div class="bar-row">
+                <div class="factor-label">
+                    <strong>${escapeHtml(factor.name)}</strong>
+                    <small class="factor-effect ${
+                        increasesRisk ? "increase" : "decrease"
+                    }">${escapeHtml(factor.direction || "Impacto relativo")}</small>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-value" style="width: ${impact}%"></div>
+                </div>
+                <span class="bar-percent">${Math.round(impact)}%</span>
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+function renderFactorModels(factorModels) {
+
+    return factorModels.map(model => {
+
+        const isXgboost = /xgboost/i.test(model.name || "");
+
+        return `
+            <article class="model-factors-card ${
+                isXgboost ? "xgboost" : "mlp"
+            }">
+                <div class="model-factors-heading">
+                    <span>Fatores do modelo</span>
+                    <h3>${escapeHtml(model.name)}</h3>
+                </div>
+                <p class="model-factors-method">
+                    ${escapeHtml(model.method || "Impacto relativo das variáveis.")}
+                </p>
+                <div class="bar-chart">
+                    ${renderFactorRows(model.factors)}
+                </div>
+            </article>
+        `;
+
+    }).join("");
 
 }
 
@@ -276,16 +362,12 @@ function getModels(
         result.models.length
     ) {
 
-        return result.models;
+        return sortModels(result.models);
 
     }
 
 
-    /*
-        Por enquanto só existe o PKL do XGBoost.
-    */
-
-    return [
+    return sortModels([
 
         {
 
@@ -301,7 +383,120 @@ function getModels(
 
         }
 
-    ];
+    ]);
+
+}
+
+
+function isModelDelayed(model) {
+
+    if (model?.prediction === 1 || model?.prediction === true) {
+        return true;
+    }
+
+    if (model?.prediction === 0 || model?.prediction === false) {
+        return false;
+    }
+
+    const threshold = /xgboost/i.test(model?.name || "") ? .20 : .30;
+    return Number(model?.probability || 0) >= threshold;
+
+}
+
+
+function modelRank(model) {
+
+    const name = String(model?.name || "").toLowerCase();
+
+    if (name.includes("xgboost")) {
+        return 0;
+    }
+
+    if (name.includes("mlp")) {
+        return 1;
+    }
+
+    return 2;
+
+}
+
+
+function sortModels(models) {
+
+    return [...models].sort(
+        (first, second) => modelRank(first) - modelRank(second)
+    );
+
+}
+
+
+function buildModelStatistics(rows) {
+
+    const statistics = new Map();
+
+    rows.forEach(result => {
+
+        const models = getModels(
+            result,
+            getProbability(result),
+            isDelayed(result)
+        );
+
+        models.forEach(model => {
+
+            const name = String(model?.name || "Modelo");
+            const probability = Math.max(
+                0,
+                Math.min(1, Number(model?.probability || 0))
+            );
+
+            if (!statistics.has(name)) {
+                statistics.set(name, {
+                    name,
+                    total: 0,
+                    delayedCount: 0,
+                    probabilitySum: 0
+                });
+            }
+
+            const item = statistics.get(name);
+            item.total += 1;
+            item.delayedCount += isModelDelayed(model) ? 1 : 0;
+            item.probabilitySum += probability;
+
+        });
+
+    });
+
+    return sortModels([...statistics.values()]);
+
+}
+
+
+function renderModelProbabilityChips(models) {
+
+    return models
+        .map(model => `
+            <span class="order-model-probability">
+                <strong>${escapeHtml(model.name)}</strong>
+                ${percentage(model.probability)}%
+            </span>
+        `)
+        .join("");
+
+}
+
+
+function renderModelProbabilityList(models) {
+
+    return models
+        .map(model => `
+            <div class="model-probability-item">
+                <span>${escapeHtml(model.name)}</span>
+                <strong>${percentage(model.probability)}%</strong>
+            </div>
+        `)
+        .join("");
 
 }
 
@@ -331,6 +526,10 @@ const onTimeCount =
     batchResult?.on_time_count ??
 
     total - delayedCount;
+
+
+const modelStatistics =
+    buildModelStatistics(results);
 
 
 /* =========================================================
@@ -369,71 +568,59 @@ document
 
         `${total} pedidos foram analisados. ` +
 
-        `Abra cada pedido para visualizar o diagnóstico individual.`;
+        `As probabilidades de cada modelo estão disponíveis no resumo e em cada pedido.`;
 
 
 /* =========================================================
    KPIs GERAIS
    ========================================================= */
 
+const modelSummaryBlocks =
+    modelStatistics
+        .map(item => {
+
+            const onTime = item.total - item.delayedCount;
+            const averageProbability = percentage(
+                item.probabilitySum / Math.max(item.total, 1)
+            );
+            const modelClass = /xgboost/i.test(item.name) ? "xgboost" : "mlp";
+
+            return `
+                <section class="model-summary-block ${modelClass}">
+                    <div class="model-summary-heading">
+                        <span>Resultado do modelo</span>
+                        <h3>${escapeHtml(item.name)}</h3>
+                    </div>
+                    <div class="model-summary-metrics">
+                        <article class="model-summary-metric">
+                            <span>Pedidos analisados</span>
+                            <strong>${item.total}</strong>
+                        </article>
+                        <article class="model-summary-metric delay">
+                            <span>Com risco de atraso</span>
+                            <strong>${item.delayedCount}</strong>
+                        </article>
+                        <article class="model-summary-metric ontime">
+                            <span>Dentro do prazo</span>
+                            <strong>${onTime}</strong>
+                        </article>
+                        <article class="model-summary-metric">
+                            <span>Risco médio</span>
+                            <strong>${averageProbability}%</strong>
+                        </article>
+                    </div>
+                </section>
+            `;
+
+        })
+        .join("");
+
+
 document
     .getElementById(
         "batchSummary"
     )
-    .innerHTML = `
-
-
-        <article class="batch-stat">
-
-            <span>
-                Pedidos analisados
-            </span>
-
-            <strong>
-                ${total}
-            </strong>
-
-        </article>
-
-
-
-        <article
-            class="
-                batch-stat
-                batch-stat-delay
-            "
-        >
-
-            <span>
-                Com risco de atraso
-            </span>
-
-            <strong>
-                ${delayedCount}
-            </strong>
-
-        </article>
-
-
-
-        <article
-            class="
-                batch-stat
-                batch-stat-ontime
-            "
-        >
-
-            <span>
-                Dentro do prazo
-            </span>
-
-            <strong>
-                ${onTimeCount}
-            </strong>
-
-        </article>
-
-    `;
+    .innerHTML = modelSummaryBlocks;
 
 
 /* =========================================================
@@ -487,10 +674,6 @@ batchResultsContainer.innerHTML =
                     );
 
 
-                const factors =
-                    getFactors(result);
-
-
                 const models =
                     getModels(
 
@@ -501,6 +684,21 @@ batchResultsContainer.innerHTML =
                         delayed
 
                     );
+
+
+                const factorModels =
+                    getFactorModels(
+                        result,
+                        models
+                    );
+
+
+                const modelProbabilityChips =
+                    renderModelProbabilityChips(models);
+
+
+                const modelProbabilityList =
+                    renderModelProbabilityList(models);
 
 
                 const pedidoId =
@@ -514,102 +712,8 @@ batchResultsContainer.innerHTML =
                    FATORES
                    ========================================= */
 
-                let factorsHtml;
-
-
-                if (factors.length) {
-
-                    factorsHtml =
-
-                        factors
-
-                            .map(
-
-                                factor => {
-
-
-                                    const impact =
-
-                                        Math.max(
-
-                                            0,
-
-                                            Math.min(
-
-                                                100,
-
-                                                Number(
-                                                    factor.impact || 0
-                                                )
-
-                                            )
-
-                                        );
-
-
-                                    return `
-
-                                        <div class="bar-row">
-
-                                            <strong>
-
-                                                ${escapeHtml(
-                                                    factor.name
-                                                )}
-
-                                            </strong>
-
-
-                                            <div class="bar-track">
-
-                                                <div
-                                                    class="bar-value"
-                                                    style="
-                                                        width:
-                                                        ${impact}%;
-                                                    "
-                                                >
-                                                </div>
-
-                                            </div>
-
-
-                                            <span class="bar-percent">
-
-                                                ${Math.round(
-                                                    impact
-                                                )}%
-
-                                            </span>
-
-                                        </div>
-
-                                    `;
-
-                                }
-
-                            )
-
-                            .join("");
-
-                }
-
-
-                else {
-
-                    factorsHtml = `
-
-                        <div class="batch-empty-state">
-
-                            Os fatores de influência ainda não
-                            foram disponibilizados pelo modelo
-                            para este pedido.
-
-                        </div>
-
-                    `;
-
-                }
+                const factorsHtml =
+                    renderFactorModels(factorModels);
 
 
                 /* =========================================
@@ -753,13 +857,9 @@ batchResultsContainer.innerHTML =
                                     </strong>
 
 
-                                    <span>
-
-                                        ${
-                                            probabilityPct
-                                        }% de probabilidade de atraso
-
-                                    </span>
+                                    <div class="order-summary-models">
+                                        ${modelProbabilityChips}
+                                    </div>
 
                                 </div>
 
@@ -915,6 +1015,13 @@ batchResultsContainer.innerHTML =
                                     </div>
 
 
+                                    <div class="model-probability-list">
+
+                                        ${modelProbabilityList}
+
+                                    </div>
+
+
                                     <div class="risk-track">
 
                                         <div
@@ -993,7 +1100,7 @@ batchResultsContainer.innerHTML =
 
                                             <span class="eyebrow">
 
-                                                Explicabilidade
+                                                Explicabilidade por modelo
 
                                             </span>
 
@@ -1010,7 +1117,7 @@ batchResultsContainer.innerHTML =
 
                                         <span class="tag">
 
-                                            Visão simplificada
+                                            XGBoost + MLP
 
                                         </span>
 
@@ -1019,14 +1126,14 @@ batchResultsContainer.innerHTML =
 
                                     <p class="panel-description">
 
-                                        Quanto maior a barra,
-                                        maior a influência daquele
-                                        fator nesta previsão.
+                                        Cada bloco mostra os cinco
+                                        fatores de maior impacto para
+                                        aquele modelo.
 
                                     </p>
 
 
-                                    <div class="bar-chart">
+                                    <div class="model-factors-grid">
 
                                         ${factorsHtml}
 
@@ -1114,8 +1221,7 @@ batchResultsContainer.innerHTML =
 
                                         <h2>
 
-                                            Como os modelos avaliaram
-                                            este pedido
+                                            Probabilidades por modelo
 
                                         </h2>
 
@@ -1124,7 +1230,7 @@ batchResultsContainer.innerHTML =
 
                                     <span class="tag">
 
-                                        Não é ensemble
+                                        XGBoost + MLP
 
                                     </span>
 
@@ -1133,9 +1239,8 @@ batchResultsContainer.innerHTML =
 
                                 <p class="panel-description">
 
-                                    Atualmente apenas o XGBoost
-                                    está conectado. Os demais modelos
-                                    poderão ser adicionados posteriormente.
+                                    Cada modelo calcula o risco separadamente
+                                    para este pedido. Não há combinação das probabilidades.
 
                                 </p>
 
