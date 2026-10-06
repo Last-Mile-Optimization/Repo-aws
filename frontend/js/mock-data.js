@@ -14,19 +14,19 @@ function buildMockPrediction(payload, index = 0) {
     probability += hour >= 18 ? .03 : 0;
     probability = Math.max(.05, Math.min(.96, probability));
 
-    const riskLevel = probability < .30 ? "Baixo" : probability < .61 ? "Moderado" : probability < .81 ? "Alto" : "Muito alto";
+    const riskLevel = probability < .20 ? "Baixo" : probability < .30 ? "Atenção" : probability < .61 ? "Moderado" : probability < .81 ? "Alto" : "Muito alto";
     const modelProbability = delta => Math.max(.03, Math.min(.97, probability + delta));
 
     return {
         analysis_id: `TESTE-${String(index + 1).padStart(3, "0")}`,
-        prediction: probability >= .5 ? 1 : 0,
+        prediction: probability >= .2 ? 1 : 0,
         probability,
-        main_model: "Mock Deep Learning",
+        main_model: "XGBoost (simulado)",
         risk_level: riskLevel,
         models: [
-            ["Deep Learning", 0], ["Random Forest", .05], ["XGBoost", .08],
-            ["Árvore de Decisão", -.04], ["KNN", -.12]
-        ].map(([name, delta]) => ({ name, probability: modelProbability(delta), prediction: modelProbability(delta) >= .5 ? 1 : 0 })),
+            ["XGBoost", 0], ["Random Forest (simulado)", .05], ["Árvore de Decisão (simulada)", -.04],
+            ["KNN (simulado)", -.12]
+        ].map(([name, delta]) => ({ name, probability: modelProbability(delta), prediction: modelProbability(delta) >= .2 ? 1 : 0 })),
         factors: [
             ["Distância da entrega", Math.min(100, Math.round(payload.distance_km / 9))],
             ["Valor do frete", Math.min(100, Math.round((payload.freight_value / Math.max(payload.price, 1)) * 170))],
@@ -66,7 +66,11 @@ function parseCsv(text) {
 
 function mockBatchFromCsv(text) {
     const [headers, ...rows] = parseCsv(text);
-    const required = ["purchase_date", "purchase_time", "price", "freight_value", "product_weight_g", "height_cm", "width_cm", "length_cm", "distance_km", "same_city"];
+    const required = [
+        "purchase_date", "purchase_time", "carrier_datetime", "estimated_delivery_datetime",
+        "price", "freight_value", "product_weight_g", "height_cm", "width_cm", "length_cm",
+        "distance_km", "same_city", "customer_city", "seller_city", "category_name"
+    ];
     const missing = required.filter(header => !headers?.includes(header));
     if (missing.length) throw new Error(`O CSV não possui as colunas: ${missing.join(", ")}.`);
     if (!rows.length) throw new Error("O CSV não possui pedidos para analisar.");
@@ -75,10 +79,14 @@ function mockBatchFromCsv(text) {
         const raw = Object.fromEntries(headers.map((header, column) => [header, row[column] || ""]));
         const payload = {
             purchase_date: raw.purchase_date, purchase_time: raw.purchase_time,
+            carrier_datetime: raw.carrier_datetime,
+            estimated_delivery_datetime: raw.estimated_delivery_datetime,
             price: Number(raw.price), freight_value: Number(raw.freight_value),
             product_weight_g: Number(raw.product_weight_g), height_cm: Number(raw.height_cm),
             width_cm: Number(raw.width_cm), length_cm: Number(raw.length_cm),
-            distance_km: Number(raw.distance_km), same_city: Number(raw.same_city)
+            distance_km: Number(raw.distance_km), same_city: Number(raw.same_city),
+            customer_city: raw.customer_city, seller_city: raw.seller_city,
+            category_name: raw.category_name
         };
         if (Object.values(payload).some(value => value === "" || Number.isNaN(value))) throw new Error(`Há dados inválidos no pedido ${index + 1}.`);
         return buildMockPrediction(payload, index);

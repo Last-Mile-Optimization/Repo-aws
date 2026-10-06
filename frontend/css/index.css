@@ -973,3 +973,13 @@ input::file-selector-button {
     }
 
 }
+
+.form-status {
+  margin: 0 0 20px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid #efb1aa;
+  background: #fff1ef;
+  color: #8f2d24;
+  font-weight: 600;
+}

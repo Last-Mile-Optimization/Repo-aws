@@ -37,14 +37,14 @@
         <span class="eyebrow">TCC • Machine Learning aplicado à logística</span>
         <h1>Antecipe riscos de atraso antes que eles virem problema.</h1>
         <p>
-          Informe os dados disponíveis no momento da compra. O sistema transforma
+          Informe os dados disponíveis no momento da coleta pela transportadora. O sistema transforma
           essas informações nas mesmas variáveis utilizadas pelos modelos e estima
           o risco de atraso da entrega.
         </p>
       </div>
       <aside class="hero-card">
         <strong>Como funciona</strong>
-        <div class="flow-step"><span>1</span> Informe os dados do pedido</div>
+        <div class="flow-step"><span>1</span> Informe os dados do pedido e da coleta</div>
         <div class="flow-step"><span>2</span> O sistema calcula as variáveis derivadas</div>
         <div class="flow-step"><span>3</span> Os modelos avaliam o risco</div>
         <div class="flow-step"><span>4</span> Você recebe uma análise explicada</div>
@@ -69,6 +69,7 @@
       </div>
 
       <form id="predictionForm">
+        <p id="formStatus" class="form-status" role="alert" hidden></p>
         <div class="form-section">
           <div class="form-section-title">
             <span class="number">01</span>
@@ -110,6 +111,28 @@
         <div class="form-section">
           <div class="form-section-title">
             <span class="number">02</span>
+            <div>
+              <h3>Coleta pela transportadora</h3>
+              <p>Esses dados definem o momento em que a previsão é feita.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <label>
+              <span>Data e hora da coleta</span>
+              <input id="carrierDatetime" name="carrierDatetime" type="datetime-local" required />
+            </label>
+
+            <label>
+              <span>Data e hora estimada de entrega</span>
+              <input id="estimatedDeliveryDatetime" name="estimatedDeliveryDatetime" type="datetime-local" required />
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">
+            <span class="number">03</span>
             <div>
               <h3>Características do produto</h3>
               <p>O volume é calculado automaticamente a partir das dimensões.</p>
@@ -158,7 +181,7 @@
 
         <div class="form-section">
           <div class="form-section-title">
-            <span class="number">03</span>
+            <span class="number">04</span>
             <div>
               <h3>Dados da entrega</h3>
               <p>Nesta versão, a distância é informada diretamente. Depois, pode ser calculada por CEP.</p>
@@ -183,6 +206,23 @@
               <input type="hidden" id="sameCity" value="1" />
             </label>
           </div>
+
+          <div class="grid grid-2" style="margin-top: 18px;">
+            <label>
+              <span>Cidade do cliente</span>
+              <input id="customerCity" name="customerCity" type="text" placeholder="Ex.: santo andre" required />
+            </label>
+
+            <label>
+              <span>Cidade do vendedor</span>
+              <input id="sellerCity" name="sellerCity" type="text" placeholder="Ex.: sao paulo" required />
+            </label>
+
+            <label>
+              <span>Categoria do produto</span>
+              <input id="categoryName" name="categoryName" type="text" placeholder="Ex.: beleza_saude" required />
+            </label>
+          </div>
         </div>
 
         <div class="features-preview">
@@ -192,12 +232,13 @@
             <p>Esses valores não precisam ser preenchidos manualmente.</p>
           </div>
           <div class="feature-chips" id="featureChips">
-            <span>feriado na compra</span>
+            <span>feriado na coleta</span>
             <span>dias desde o último feriado</span>
             <span>dias até o próximo feriado</span>
+            <span>eventos de e-commerce</span>
             <span>hora da compra</span>
             <span>dia da semana</span>
-            <span>fim de semana</span>
+            <span>prazo restante da transportadora</span>
             <span>volume</span>
           </div>
         </div>
@@ -205,7 +246,7 @@
         <div class="submit-row">
           <div class="privacy-note">
             <strong>Sem data leakage</strong>
-            <span>A análise usa apenas dados disponíveis no momento da compra.</span>
+            <span>A análise usa apenas dados disponíveis até a coleta pela transportadora.</span>
           </div>
           <button type="submit" class="button primary" id="submitButton">
             <span>Analisar risco de atraso</span>
@@ -220,14 +261,14 @@
             <span class="number">01</span>
             <div>
               <h3 id="batchTitle">Adicionar arquivo CSV</h3>
-              <p>Selecione um arquivo com os pedidos que deseja analisar em conjunto.</p>
+            <p>Envie um CSV bruto com as mesmas colunas preenchidas no formulário individual.</p>
             </div>
           </div>
           <div class="csv-upload">
             <label for="csvFile"><span>Arquivo de pedidos</span></label>
             <input id="csvFile" name="csvFile" type="file" accept=".csv,text/csv"
               aria-describedby="csvHelp csvStatus" />
-            <p id="csvHelp">Formato .csv. O arquivo será enviado para análise quando você clicar no botão abaixo.</p>
+            <p id="csvHelp">Formato .csv em UTF-8. A API calcula todas as variáveis derivadas antes de analisar.</p>
             <p id="csvStatus" role="status" aria-live="polite">Nenhum arquivo selecionado.</p>
             <div class="csv-actions">
               <a class="button ghost compact" href="exemplo-pedidos.csv" download>Baixar CSV de exemplo</a>
@@ -243,12 +284,13 @@
             <p>O sistema aplica o mesmo tratamento a todos os pedidos do arquivo.</p>
           </div>
           <div class="feature-chips">
-            <span>feriado na compra</span>
+            <span>feriado na coleta</span>
             <span>dias desde o último feriado</span>
             <span>dias até o próximo feriado</span>
+            <span>eventos de e-commerce</span>
             <span>hora da compra</span>
             <span>dia da semana</span>
-            <span>fim de semana</span>
+            <span>prazo restante da transportadora</span>
             <span>volume</span>
           </div>
         </div>
