@@ -18,7 +18,8 @@ from .feature_pipeline import (
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "xgboost_lastmile_model.pkl"
+MLP_MODEL_PATH = BASE_DIR / "modelo_mlp_final.pkl"
+XGBOOST_MODEL_PATH = BASE_DIR / "xgboost_lastmile_model.pkl"
 
 app = FastAPI(title="API Previsão de Atrasos - TCC")
 app.add_middleware(
@@ -50,41 +51,79 @@ class DadosEntrega(BaseModel):
     category_name: str
 
 
-def _load_artifact() -> dict[str, Any]:
-    if not MODEL_PATH.exists():
-        raise RuntimeError(f"Modelo não encontrado em {MODEL_PATH.name}.")
-    with MODEL_PATH.open("rb") as file:
+def _load_mlp_artifact() -> dict[str, Any]:
+    if not MLP_MODEL_PATH.exists():
+        raise RuntimeError(f"Modelo MLP não encontrado em {MLP_MODEL_PATH.name}.")
+    with MLP_MODEL_PATH.open("rb") as file:
         artifact = pickle.load(file)
 
     required = {
-        "modelo",
-        "limiar",
-        "feature_names",
+        "model",
+        "threshold",
+        "features",
         "scaler",
         "encoding_maps",
         "global_delay_rate",
         "schema_version",
+        "model_type",
     }
     missing = required.difference(artifact) if isinstance(artifact, dict) else required
     if missing:
         raise RuntimeError(
-            "Artefato do modelo incompatível. Gere o arquivo pelo notebook atualizado. "
+            "Artefato do MLP incompatível. Gere o arquivo pelo notebook atualizado. "
             f"Campos ausentes: {', '.join(sorted(missing))}."
         )
-    if artifact["schema_version"] != 2:
+    if artifact["schema_version"] != 3:
         raise RuntimeError("Versão do artefato não suportada pela API atual.")
+    if artifact["model_type"] != "MLPClassifier":
+        raise RuntimeError("O artefato informado não contém um modelo MLPClassifier.")
+    if not hasattr(artifact["model"], "predict_proba"):
+        raise RuntimeError("O modelo MLP não suporta cálculo de probabilidades.")
+    return artifact
+
+
+def _load_xgboost_artifact() -> dict[str, Any]:
+    if not XGBOOST_MODEL_PATH.exists():
+        raise RuntimeError(
+            f"Modelo XGBoost não encontrado em {XGBOOST_MODEL_PATH.name}."
+        )
+    with XGBOOST_MODEL_PATH.open("rb") as file:
+        artifact = pickle.load(file)
+
+    required = {"modelo", "limiar", "feature_names", "scaler", "schema_version"}
+    missing = required.difference(artifact) if isinstance(artifact, dict) else required
+    if missing:
+        raise RuntimeError(
+            "Artefato do XGBoost incompatível. "
+            f"Campos ausentes: {', '.join(sorted(missing))}."
+        )
+    if not hasattr(artifact["modelo"], "predict_proba"):
+        raise RuntimeError("O modelo XGBoost não suporta cálculo de probabilidades.")
     return artifact
 
 
 try:
-    ARTEFATO = _load_artifact()
-    MODELO = ARTEFATO["modelo"]
-    LIMIAR_ATRASO = float(ARTEFATO["limiar"])
+    ARTEFATO = _load_mlp_artifact()
+    ARTEFATO_XGBOOST = _load_xgboost_artifact()
+    if ARTEFATO["features"] != ARTEFATO_XGBOOST["feature_names"]:
+        raise RuntimeError("MLP e XGBoost possuem variáveis de entrada incompatíveis.")
+
+    MODELO = ARTEFATO["model"]
+    MODELO_XGBOOST = ARTEFATO_XGBOOST["modelo"]
+    LIMIAR_ATRASO = float(ARTEFATO["threshold"])
+    LIMIAR_XGBOOST = float(ARTEFATO_XGBOOST["limiar"])
+    MODEL_NAME = str(ARTEFATO.get("model_name", "MLP (Rede Neural)"))
+    XGBOOST_MODEL_NAME = "XGBoost"
     LOAD_ERROR = None
 except Exception as exc:  # Mantém /health disponível para facilitar diagnóstico.
     ARTEFATO = None
+    ARTEFATO_XGBOOST = None
     MODELO = None
-    LIMIAR_ATRASO = 0.20
+    MODELO_XGBOOST = None
+    LIMIAR_ATRASO = 0.30
+    LIMIAR_XGBOOST = 0.20
+    MODEL_NAME = "MLP (Rede Neural)"
+    XGBOOST_MODEL_NAME = "XGBoost"
     LOAD_ERROR = str(exc)
 
 
@@ -119,12 +158,18 @@ FEATURE_LABELS = {
 
 
 def _require_model() -> None:
-    if MODELO is None or ARTEFATO is None:
-        raise HTTPException(status_code=503, detail=f"Modelo indisponível: {LOAD_ERROR}")
+    if (
+        MODELO is None
+        or MODELO_XGBOOST is None
+        or ARTEFATO is None
+        or ARTEFATO_XGBOOST is None
+    ):
+        raise HTTPException(status_code=503, detail=f"Modelos indisponíveis: {LOAD_ERROR}")
 
 
 def _risk_level(probability: float) -> str:
-    if probability < LIMIAR_ATRASO:
+    """Faixas exibidas na interface para o XGBoost, modelo principal."""
+    if probability < LIMIAR_XGBOOST:
         return "Baixo"
     if probability < 0.30:
         return "Atenção"
@@ -135,25 +180,110 @@ def _risk_level(probability: float) -> str:
     return "Muito alto"
 
 
-def _local_factors(feature_row: pd.DataFrame) -> list[dict[str, Any]]:
-    """Calcula contribuições locais do XGBoost; sem trocar a previsão se falhar."""
+def _format_factors(
+    feature_names: list[str],
+    contributions: list[float] | Any,
+) -> list[dict[str, Any]]:
+    """Normaliza as contribuições para as barras de explicabilidade."""
+    impacts = [
+        (name, float(contribution))
+        for name, contribution in zip(feature_names, contributions)
+    ]
+    top = sorted(impacts, key=lambda item: abs(item[1]), reverse=True)[:5]
+    largest_impact = max((abs(value) for _, value in top), default=0.0)
+    if largest_impact == 0:
+        return []
+
+    return [
+        {
+            "name": FEATURE_LABELS.get(name, name),
+            "impact": round(abs(value) / largest_impact * 100),
+            "direction": (
+                "Aumenta o risco"
+                if value > 0
+                else "Reduz o risco"
+                if value < 0
+                else "Impacto neutro"
+            ),
+        }
+        for name, value in top
+    ]
+
+
+def _xgboost_local_factors(
+    feature_row: pd.DataFrame,
+) -> tuple[list[dict[str, Any]], str]:
+    """Obtém as contribuições locais nativas do XGBoost para o pedido."""
     try:
         import xgboost as xgb
 
-        booster = MODELO.get_booster()
-        contributions = booster.predict(xgb.DMatrix(feature_row), pred_contribs=True)[0][:-1]
-        impacts = dict(zip(feature_row.columns, map(abs, contributions)))
+        booster = MODELO_XGBOOST.get_booster()
+        feature_names = list(feature_row.columns)
+        matrix = xgb.DMatrix(feature_row, feature_names=feature_names)
+        contributions = booster.predict(matrix, pred_contribs=True)[0][:-1]
+        return (
+            _format_factors(feature_names, contributions),
+            "Contribuições locais calculadas pelo XGBoost para este pedido.",
+        )
     except Exception:
-        importances = getattr(MODELO, "feature_importances_", None)
-        if importances is None:
-            return []
-        impacts = dict(zip(feature_row.columns, map(float, importances)))
+        # Mantém uma explicação útil caso a versão instalada do XGBoost não
+        # suporte contribuições locais. O texto deixa claro que é global.
+        try:
+            importances = MODELO_XGBOOST.feature_importances_
+            return (
+                _format_factors(list(feature_row.columns), importances),
+                "Importância global do XGBoost (contribuição local indisponível).",
+            )
+        except Exception:
+            return [], "Não foi possível calcular os fatores do XGBoost para este pedido."
 
-    top = sorted(impacts.items(), key=lambda item: item[1], reverse=True)[:5]
-    highest = max((impact for _, impact in top), default=0) or 1
+
+def _mlp_local_factors(
+    feature_row: pd.DataFrame,
+    base_probability: float,
+) -> tuple[list[dict[str, Any]], str]:
+    """Mede a sensibilidade local do MLP ao neutralizar uma variável por vez.
+
+    As features chegam padronizadas; portanto, o valor zero representa a média
+    de treino. A variação da probabilidade mede o efeito local do valor real do
+    pedido em comparação com esse valor típico.
+    """
+    try:
+        feature_names = list(feature_row.columns)
+        variants = pd.concat([feature_row] * len(feature_names), ignore_index=True)
+        for position, feature_name in enumerate(feature_names):
+            variants.loc[position, feature_name] = 0.0
+
+        neutralized_probabilities = MODELO.predict_proba(variants)[:, 1]
+        contributions = [
+            float(base_probability - probability)
+            for probability in neutralized_probabilities
+        ]
+        return (
+            _format_factors(feature_names, contributions),
+            "Sensibilidade local do MLP: cada variável é comparada ao valor médio de treino.",
+        )
+    except Exception:
+        return [], "Não foi possível calcular os fatores do MLP para este pedido."
+
+
+def _model_factor_groups(
+    feature_row: pd.DataFrame,
+    mlp_probability: float,
+) -> list[dict[str, Any]]:
+    xgboost_factors, xgboost_method = _xgboost_local_factors(feature_row)
+    mlp_factors, mlp_method = _mlp_local_factors(feature_row, mlp_probability)
     return [
-        {"name": FEATURE_LABELS.get(name, name), "impact": round(impact / highest * 100)}
-        for name, impact in top
+        {
+            "name": XGBOOST_MODEL_NAME,
+            "method": xgboost_method,
+            "factors": xgboost_factors,
+        },
+        {
+            "name": MODEL_NAME,
+            "method": mlp_method,
+            "factors": mlp_factors,
+        },
     ]
 
 
@@ -166,23 +296,46 @@ def _to_json_value(value: Any) -> Any:
 
 
 def _build_result(
-    probability: float,
+    mlp_probability: float,
+    xgboost_probability: float,
     feature_row: pd.DataFrame,
     raw_row: dict[str, Any],
     pedido_id: int | None = None,
     resultado_real: int | None = None,
 ) -> dict[str, Any]:
-    delayed = probability >= LIMIAR_ATRASO
+    # O XGBoost é a fonte oficial da decisão apresentada no sistema. O MLP
+    # permanece no retorno apenas para comparação transparente no frontend.
+    delayed = xgboost_probability >= LIMIAR_XGBOOST
+    mlp_delayed = mlp_probability >= LIMIAR_ATRASO
+    factors_by_model = _model_factor_groups(feature_row, mlp_probability)
     result = {
         "previsao_atraso": delayed,
         "prediction": int(delayed),
-        "probabilidade": probability,
-        "probability": probability,
-        "risk_level": _risk_level(probability),
-        "decision_threshold": LIMIAR_ATRASO,
-        "main_model": "XGBoost",
-        "models": [{"name": "XGBoost", "probability": probability, "prediction": int(delayed)}],
-        "factors": _local_factors(feature_row),
+        "probabilidade": xgboost_probability,
+        "probability": xgboost_probability,
+        "risk_level": _risk_level(xgboost_probability),
+        "decision_threshold": LIMIAR_XGBOOST,
+        "main_model": XGBOOST_MODEL_NAME,
+        "models": [
+            {
+                "name": XGBOOST_MODEL_NAME,
+                "probability": xgboost_probability,
+                "prediction": int(xgboost_probability >= LIMIAR_XGBOOST),
+                "decision_threshold": LIMIAR_XGBOOST,
+            },
+            {
+                "name": MODEL_NAME,
+                "probability": mlp_probability,
+                "prediction": int(mlp_delayed),
+                "decision_threshold": LIMIAR_ATRASO,
+            },
+        ],
+        # Mantém "factors" para compatibilidade com versões anteriores do
+        # frontend e fornece os dois grupos para a nova visualização.
+        "factors": factors_by_model[0]["factors"],
+        "factors_by_model": factors_by_model,
+        "factors_available": any(group["factors"] for group in factors_by_model),
+        "factors_message": "Os fatores são exibidos separadamente para cada modelo.",
         "input": {key: _to_json_value(value) for key, value in raw_row.items()},
     }
     if pedido_id is not None:
@@ -192,14 +345,17 @@ def _build_result(
     return result
 
 
-def _predict_raw_dataframe(raw_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, list[float]]:
+def _predict_raw_dataframe(
+    raw_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, list[float], list[float]]:
     _require_model()
     try:
         clean_raw, features = transform_raw_dataframe(raw_df, ARTEFATO)
     except InputValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    probabilities = MODELO.predict_proba(features)[:, 1].astype(float).tolist()
-    return clean_raw, features, probabilities
+    mlp_probabilities = MODELO.predict_proba(features)[:, 1].astype(float).tolist()
+    xgboost_probabilities = MODELO_XGBOOST.predict_proba(features)[:, 1].astype(float).tolist()
+    return clean_raw, features, mlp_probabilities, xgboost_probabilities
 
 
 @app.get("/health")
@@ -208,8 +364,14 @@ def health_check():
         "status": "ok" if LOAD_ERROR is None else "error",
         "model_loaded": LOAD_ERROR is None,
         "inference_moment": "carrier_collection",
+        "model_name": XGBOOST_MODEL_NAME,
+        "model_type": "XGBClassifier",
+        "models": [
+            {"name": XGBOOST_MODEL_NAME, "type": "XGBClassifier", "threshold": LIMIAR_XGBOOST},
+            {"name": MODEL_NAME, "type": "MLPClassifier", "threshold": LIMIAR_ATRASO},
+        ],
         "raw_columns": RAW_COLUMNS,
-        "threshold": LIMIAR_ATRASO,
+        "threshold": LIMIAR_XGBOOST,
         "detail": LOAD_ERROR,
     }
 
@@ -217,8 +379,15 @@ def health_check():
 @app.post("/predict")
 def prever_atraso_individual(dados: DadosEntrega):
     payload = dados.model_dump() if hasattr(dados, "model_dump") else dados.dict()
-    clean_raw, features, probabilities = _predict_raw_dataframe(pd.DataFrame([payload]))
-    result = _build_result(probabilities[0], features.iloc[[0]], clean_raw.iloc[0].to_dict())
+    clean_raw, features, mlp_probabilities, xgboost_probabilities = _predict_raw_dataframe(
+        pd.DataFrame([payload])
+    )
+    result = _build_result(
+        mlp_probabilities[0],
+        xgboost_probabilities[0],
+        features.iloc[[0]],
+        clean_raw.iloc[0].to_dict(),
+    )
     result["analysis_id"] = f"IND-{pd.Timestamp.now().strftime('%Y%m%d%H%M%S')}"
     result["demo_mode"] = False
     return result
@@ -239,9 +408,9 @@ async def prever_atraso_lote(file: UploadFile = File(...)):
     except pd.errors.ParserError as exc:
         raise HTTPException(status_code=400, detail=f"CSV inválido: {exc}") from exc
 
-    clean_raw, features, probabilities = _predict_raw_dataframe(raw_df)
+    clean_raw, features, mlp_probabilities, xgboost_probabilities = _predict_raw_dataframe(raw_df)
     resultados = []
-    for position, probability in enumerate(probabilities):
+    for position, mlp_probability in enumerate(mlp_probabilities):
         actual = raw_df.iloc[position].get("target_real_atraso")
         if pd.notna(actual):
             try:
@@ -260,7 +429,8 @@ async def prever_atraso_lote(file: UploadFile = File(...)):
             actual = None
         resultados.append(
             _build_result(
-                probability,
+                mlp_probability,
+                xgboost_probabilities[position],
                 features.iloc[[position]],
                 clean_raw.iloc[position].to_dict(),
                 pedido_id=position + 1,
@@ -274,7 +444,7 @@ async def prever_atraso_lote(file: UploadFile = File(...)):
         "total": len(resultados),
         "delayed_count": delayed_count,
         "on_time_count": len(resultados) - delayed_count,
-        "decision_threshold": LIMIAR_ATRASO,
+        "decision_threshold": LIMIAR_XGBOOST,
         "resultados": resultados,
         "demo_mode": False,
     }

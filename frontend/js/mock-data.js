@@ -14,26 +14,63 @@ function buildMockPrediction(payload, index = 0) {
     probability += hour >= 18 ? .03 : 0;
     probability = Math.max(.05, Math.min(.96, probability));
 
-    const riskLevel = probability < .20 ? "Baixo" : probability < .30 ? "Atenção" : probability < .61 ? "Moderado" : probability < .81 ? "Alto" : "Muito alto";
-    const modelProbability = delta => Math.max(.03, Math.min(.97, probability + delta));
+    const xgboostProbability = Math.max(
+        .03,
+        Math.min(
+            .97,
+            probability + (payload.distance_km > 350 ? .08 : -.03) + (weekend ? .02 : 0)
+        )
+    );
+
+    const riskLevel = xgboostProbability < .20 ? "Baixo" : xgboostProbability < .30 ? "Atenção" : xgboostProbability < .61 ? "Moderado" : xgboostProbability < .81 ? "Alto" : "Muito alto";
+
+    const xgboostFactors = [
+        ["Distância da entrega", Math.min(100, Math.round(payload.distance_km / 9)), "Aumenta o risco"],
+        ["Valor do frete", Math.min(100, Math.round((payload.freight_value / Math.max(payload.price, 1)) * 170)), "Aumenta o risco"],
+        ["Peso do produto", Math.min(100, Math.round(payload.product_weight_g / 50)), "Aumenta o risco"],
+        ["Volume do produto", Math.min(100, Math.round(volume / 700)), "Aumenta o risco"],
+        ["Mesma cidade", payload.same_city ? 35 : 68, payload.same_city ? "Reduz o risco" : "Aumenta o risco"]
+    ].sort((first, second) => second[1] - first[1]).map(([name, impact, direction]) => ({ name, impact, direction }));
+
+    const mlpFactors = [
+        ["Distância da entrega", Math.min(100, Math.round(payload.distance_km / 11)), "Aumenta o risco"],
+        ["Valor do frete", Math.min(100, Math.round((payload.freight_value / Math.max(payload.price, 1)) * 145)), "Aumenta o risco"],
+        ["Fim de semana", weekend ? 62 : 18, weekend ? "Aumenta o risco" : "Reduz o risco"],
+        ["Peso do produto", Math.min(100, Math.round(payload.product_weight_g / 60)), "Aumenta o risco"],
+        ["Mesma cidade", payload.same_city ? 48 : 61, payload.same_city ? "Reduz o risco" : "Aumenta o risco"]
+    ].sort((first, second) => second[1] - first[1]).map(([name, impact, direction]) => ({ name, impact, direction }));
 
     return {
         analysis_id: `TESTE-${String(index + 1).padStart(3, "0")}`,
-        prediction: probability >= .2 ? 1 : 0,
-        probability,
+        prediction: xgboostProbability >= .2 ? 1 : 0,
+        probability: xgboostProbability,
         main_model: "XGBoost (simulado)",
         risk_level: riskLevel,
         models: [
-            ["XGBoost", 0], ["Random Forest (simulado)", .05], ["Árvore de Decisão (simulada)", -.04],
-            ["KNN (simulado)", -.12]
-        ].map(([name, delta]) => ({ name, probability: modelProbability(delta), prediction: modelProbability(delta) >= .2 ? 1 : 0 })),
-        factors: [
-            ["Distância da entrega", Math.min(100, Math.round(payload.distance_km / 9))],
-            ["Valor do frete", Math.min(100, Math.round((payload.freight_value / Math.max(payload.price, 1)) * 170))],
-            ["Peso do produto", Math.min(100, Math.round(payload.product_weight_g / 50))],
-            ["Volume do produto", Math.min(100, Math.round(volume / 700))],
-            ["Fim de semana", weekend ? 62 : 18]
-        ].sort((a, b) => b[1] - a[1]).map(([name, impact]) => ({ name, impact })),
+            {
+                name: "XGBoost (simulado)",
+                probability: xgboostProbability,
+                prediction: xgboostProbability >= .2 ? 1 : 0
+            },
+            {
+                name: "MLP (simulado)",
+                probability,
+                prediction: probability >= .3 ? 1 : 0
+            }
+        ],
+        factors: xgboostFactors,
+        factors_by_model: [
+            {
+                name: "XGBoost (simulado)",
+                method: "Contribuições locais simuladas do XGBoost.",
+                factors: xgboostFactors
+            },
+            {
+                name: "MLP (simulado)",
+                method: "Sensibilidade local simulada do MLP.",
+                factors: mlpFactors
+            }
+        ],
         cluster: payload.distance_km > 500
             ? { name: "Pedidos de longa distância", description: "Entregas com maior deslocamento entre vendedor e cliente.", stats: [["Distância média", "684 km"], ["Frete médio", "R$ 52,40"], ["Atrasos no grupo", "37%"]] }
             : { name: "Pedidos urbanos e leves", description: "Entregas de menor porte e menor deslocamento.", stats: [["Distância média", "96 km"], ["Frete médio", "R$ 24,10"], ["Atrasos no grupo", "14%"]] },
